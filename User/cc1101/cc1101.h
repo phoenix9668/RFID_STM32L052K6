@@ -15,7 +15,6 @@
 #ifndef _CC1101_H_
 #define _CC1101_H_
 
-#include "stm32f4xx_conf.h"
 #include "./cc1101/cc1101_reg.h"
 #include "./spi/bsp_spi.h"
 
@@ -88,7 +87,7 @@ void CC1101Reset(void);
 void CC1101WriteMultiReg(uint8_t addr, uint8_t *buff, uint8_t size);
 
 /*write one byte through SPI,in the meantime read one byte*/
-extern uint8_t SPI_ExchangeByte(SPI_TypeDef* SPIx, uint8_t input);
+extern uint8_t SPI_ExchangeByte(uint8_t input);
 
 /*Read the RSSI value in rx*/
 int16_t CC1101ReadRSSI(void);

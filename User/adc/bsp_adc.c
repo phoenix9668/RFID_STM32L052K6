@@ -13,161 +13,167 @@
   */ 
 #include "./adc/bsp_adc.h"
 
-__IO uint16_t ADC_ConvertedValue[3];
+uint16_t ADC_ConvertedValue[MMA7361L_NOFCHANEL];
+DMA_HandleTypeDef DMA_Init_Handle;
+ADC_HandleTypeDef ADC_Handle;
+ADC_ChannelConfTypeDef ADC_Config;
 
-static void MMA7361L_ADC_GPIO_Config(void)
+void MMA7361L_ADC_GPIO_Config(void)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	// 使能 GPIO 时钟
-	RCC_AHB1PeriphClockCmd(MMA7361L_ADC1_GPIO_CLK, ENABLE);
-	RCC_AHB1PeriphClockCmd(MMA7361L_ADC2_GPIO_CLK, ENABLE);
-	RCC_AHB1PeriphClockCmd(MMA7361L_ADC3_GPIO_CLK, ENABLE);
-	RCC_AHB1PeriphClockCmd(MMA7361L_SL_GPIO_CLK, ENABLE);
-	RCC_AHB1PeriphClockCmd(MMA7361L_GS_GPIO_CLK, ENABLE);
+	MMA7361L_SL_GPIO_CLK_ENABLE();
+	MMA7361L_GS_GPIO_CLK_ENABLE();
+	MMA7361L_ADC1_GPIO_CLK_ENABLE();
+	MMA7361L_ADC2_GPIO_CLK_ENABLE();
+	MMA7361L_ADC3_GPIO_CLK_ENABLE();
 		
 	// 配置 IO
-	GPIO_InitStructure.GPIO_Pin = MMA7361L_ADC1_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;	    
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL ; //不上拉不下拉
-	GPIO_Init(MMA7361L_ADC1_GPIO_PORT, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin = MMA7361L_ADC1_GPIO_PIN;
+	GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;	    
+  GPIO_InitStructure.Pull = GPIO_NOPULL ; //不上拉不下拉
+	HAL_GPIO_Init(MMA7361L_ADC1_GPIO_PORT, &GPIO_InitStructure);
 
 	// 配置 IO
-	GPIO_InitStructure.GPIO_Pin = MMA7361L_ADC2_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;	    
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL ; //不上拉不下拉
-	GPIO_Init(MMA7361L_ADC2_GPIO_PORT, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin = MMA7361L_ADC2_GPIO_PIN;
+	GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;	    
+  GPIO_InitStructure.Pull = GPIO_NOPULL ; //不上拉不下拉
+	HAL_GPIO_Init(MMA7361L_ADC2_GPIO_PORT, &GPIO_InitStructure);
 	
 	// 配置 IO
-	GPIO_InitStructure.GPIO_Pin = MMA7361L_ADC3_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;	    
-  GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL ; //不上拉不下拉
-	GPIO_Init(MMA7361L_ADC3_GPIO_PORT, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin = MMA7361L_ADC3_GPIO_PIN;
+	GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;	    
+  GPIO_InitStructure.Pull = GPIO_NOPULL ; //不上拉不下拉
+	HAL_GPIO_Init(MMA7361L_ADC3_GPIO_PORT, &GPIO_InitStructure);
 
 	// 配置 IO
-	GPIO_InitStructure.GPIO_Pin = MMA7361L_SL_GPIO_PIN;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(MMA7361L_SL_GPIO_PORT, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin = MMA7361L_SL_GPIO_PIN;
+	GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+	GPIO_InitStructure.Pull  = GPIO_NOPULL;
+	GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+	HAL_GPIO_Init(MMA7361L_SL_GPIO_PORT, &GPIO_InitStructure);
 	
 	// 配置 IO
-	GPIO_InitStructure.GPIO_Pin = MMA7361L_GS_GPIO_PIN;
-	GPIO_Init(MMA7361L_GS_GPIO_PORT, &GPIO_InitStructure);
+	GPIO_InitStructure.Pin = MMA7361L_GS_GPIO_PIN;
+	HAL_GPIO_Init(MMA7361L_GS_GPIO_PORT, &GPIO_InitStructure);
 }
 
-static void MMA7361L_ADC_Mode_Config(void)
+void MMA7361L_ADC_Mode_Config(void)
 {
-	DMA_InitTypeDef DMA_InitStructure;
-	ADC_InitTypeDef ADC_InitStructure;
-  ADC_CommonInitTypeDef ADC_CommonInitStructure;
-	
   // ------------------DMA Init 结构体参数 初始化--------------------------
   // ADC1使用DMA2，数据流0，通道0，这个是手册固定死的
-  // 开启DMA时钟
-  RCC_AHB1PeriphClockCmd(MMA7361L_ADC_DMA_CLK, ENABLE); 
-	// 外设基址为：ADC 数据寄存器地址
-	DMA_InitStructure.DMA_PeripheralBaseAddr = MMA7361L_ADC_CDR_ADDR;	
-  // 存储器地址，实际上就是一个内部SRAM的变量
-	DMA_InitStructure.DMA_Memory0BaseAddr = (u32)ADC_ConvertedValue;  
-  // 数据传输方向为外设到存储器	
-	DMA_InitStructure.DMA_DIR = DMA_DIR_PeripheralToMemory;	
-	// 缓冲区大小为，指一次传输的数据量
-	DMA_InitStructure.DMA_BufferSize = 3;	
+  /* Enable DMA1 clock */
+  MMA7361L_ADC_DMA_CLK_ENABLE(); 
+	// 数据传输通道
+	DMA_Init_Handle.Instance = MMA7361L_ADC_DMA_CHANNEL;	
+  // 数据传输方向为外设到存储器
+	DMA_Init_Handle.Init.Direction = DMA_PERIPH_TO_MEMORY;	
 	// 外设寄存器只有一个，地址不用递增
-	DMA_InitStructure.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+	DMA_Init_Handle.Init.PeriphInc = DMA_PINC_DISABLE;
   // 存储器地址固定
-	DMA_InitStructure.DMA_MemoryInc = DMA_MemoryInc_Enable; 
+	DMA_Init_Handle.Init.MemInc = DMA_MINC_ENABLE; 
   // 外设数据大小为半字，即两个字节
-	DMA_InitStructure.DMA_PeripheralDataSize = DMA_PeripheralDataSize_HalfWord; 
+	DMA_Init_Handle.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD; 
   // 存储器数据大小也为半字，跟外设数据大小相同
-	DMA_InitStructure.DMA_MemoryDataSize = DMA_PeripheralDataSize_HalfWord;	
+	DMA_Init_Handle.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;	
 	// 循环传输模式
-	DMA_InitStructure.DMA_Mode = DMA_Mode_Circular;
+	DMA_Init_Handle.Init.Mode = DMA_CIRCULAR;
   // DMA 传输通道优先级为高，当使用一个DMA通道时，优先级设置不影响
-	DMA_InitStructure.DMA_Priority = DMA_Priority_High;
-  // 禁止DMA FIFO	，使用直连模式
-  DMA_InitStructure.DMA_FIFOMode = DMA_FIFOMode_Disable;  
-  // FIFO 大小，FIFO模式禁止时，这个不用配置	
-  DMA_InitStructure.DMA_FIFOThreshold = DMA_FIFOThreshold_HalfFull;
-  DMA_InitStructure.DMA_MemoryBurst = DMA_MemoryBurst_Single;
-  DMA_InitStructure.DMA_PeripheralBurst = DMA_PeripheralBurst_Single;  
-	// 选择 DMA 通道，通道存在于流中
-  DMA_InitStructure.DMA_Channel = MMA7361L_ADC_DMA_CHANNEL;
-  // 初始化DMA流，流相当于一个大的管道，管道里面有很多通道
-	DMA_Init(MMA7361L_ADC_DMA_STREAM, &DMA_InitStructure);
-	// 使能DMA流
-  DMA_Cmd(MMA7361L_ADC_DMA_STREAM, ENABLE);
+	DMA_Init_Handle.Init.Priority = DMA_PRIORITY_HIGH;
+
+	DMA_Init_Handle.Init.Request = DMA_REQUEST_0;
+  /* Deinitialize  & Initialize the DMA for new transfer */
+	HAL_DMA_DeInit(&DMA_Init_Handle);
+	HAL_DMA_Init(&DMA_Init_Handle);
 	
+	HAL_DMA_Start(&DMA_Init_Handle,MMA7361L_ADC_DR_ADDR,(uint32_t)&ADC_ConvertedValue,MMA7361L_NOFCHANEL);
+	
+//	/* NVIC configuration for DMA Input data interrupt */
+//  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 1, 0);
+//  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 	
 	// 开启ADC时钟
-	RCC_APB2PeriphClockCmd(MMA7361L_ADC1_CLK , ENABLE);
-  RCC_APB2PeriphClockCmd(MMA7361L_ADC2_CLK , ENABLE);
-	RCC_APB2PeriphClockCmd(MMA7361L_ADC3_CLK , ENABLE);
+	MMA7361L_ADC_CLK_ENABLE();
 	
-  // -------------------ADC Common 结构体 参数 初始化------------------------
-	// 独立ADC模式
-  ADC_CommonInitStructure.ADC_Mode = ADC_TripleMode_RegSimult;
-  // 时钟为fpclk x分频	
-  ADC_CommonInitStructure.ADC_Prescaler = ADC_Prescaler_Div4;
-  // 禁止DMA直接访问模式	
-  ADC_CommonInitStructure.ADC_DMAAccessMode = ADC_DMAAccessMode_1;
-  // 采样时间间隔	
-  ADC_CommonInitStructure.ADC_TwoSamplingDelay = ADC_TwoSamplingDelay_5Cycles;  
-  ADC_CommonInit(&ADC_CommonInitStructure);
-	
-  // -------------------ADC Init 结构体 参数 初始化--------------------------
-	ADC_StructInit(&ADC_InitStructure);
-  // ADC 分辨率
-  ADC_InitStructure.ADC_Resolution = ADC_Resolution_12b;
-  // 禁止扫描模式，多通道采集才需要	
-  ADC_InitStructure.ADC_ScanConvMode = DISABLE; 
-  // 连续转换	
-  ADC_InitStructure.ADC_ContinuousConvMode = ENABLE; 
-  // 禁止外部边沿触发
-  ADC_InitStructure.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;
+  /* ### - 1 - Initialize ADC peripheral #################################### */
+  /*
+   *  Instance                  = ADC1.
+   *  OversamplingMode          = Disabled
+   *  ClockPrescaler            = PCLK clock with no division.
+   *  LowPowerAutoPowerOff      = Disabled (For this exemple continuous mode is enabled with software start)
+   *  LowPowerFrequencyMode     = Enabled (To be enabled only if ADC clock is lower than 2.8MHz) 
+   *  LowPowerAutoWait          = Disabled (New conversion starts only when the previous conversion is completed)       
+   *  Resolution                = 12 bit (increased to 16 bit with oversampler)
+   *  SamplingTime              = 3.5 cycles od ADC clock.
+   *  ScanConvMode              = Forward 
+   *  DataAlign                 = Right
+   *  ContinuousConvMode        = Enabled
+   *  DiscontinuousConvMode     = Enabled
+   *  ExternalTrigConvEdge      = None (Software start)
+   *  EOCSelection              = End Of Conversion event
+   *  DMAContinuousRequests     = ENABLE
+   */
+	ADC_Handle.Instance = MMA7361L_ADC;
+	ADC_Handle.Init.OversamplingMode = DISABLE;
+  ADC_Handle.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV1;
+	ADC_Handle.Init.LowPowerAutoPowerOff = DISABLE;
+  ADC_Handle.Init.LowPowerFrequencyMode = ENABLE;
+  ADC_Handle.Init.LowPowerAutoWait = DISABLE;
+  ADC_Handle.Init.Resolution = ADC_RESOLUTION_12B;
+	ADC_Handle.Init.SamplingTime = ADC_SAMPLETIME_3CYCLES_5;
+  ADC_Handle.Init.ScanConvMode = ADC_SCAN_ENABLE; 
+  ADC_Handle.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  ADC_Handle.Init.ContinuousConvMode = ENABLE;
+	ADC_Handle.Init.DiscontinuousConvMode = DISABLE;
+  ADC_Handle.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
   // 外部触发通道，本例子使用软件触发，此值随便赋值即可
-  ADC_InitStructure.ADC_ExternalTrigConv = ADC_ExternalTrigConv_T1_CC1;
-  // 数据右对齐	
-  ADC_InitStructure.ADC_DataAlign = ADC_DataAlign_Right;
-  // 转换通道 1个
-  ADC_InitStructure.ADC_NbrOfConversion = 1;
-	
-  //---------------------------------------------------------------------------	
-  ADC_Init(MMA7361L_ADC1, &ADC_InitStructure);	
-   // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
-  ADC_RegularChannelConfig(MMA7361L_ADC1, MMA7361L_ADC1_CHANNEL, 1, ADC_SampleTime_3Cycles);   
-  //---------------------------------------------------------------------------
-	
-	ADC_Init(MMA7361L_ADC2, &ADC_InitStructure);
-  // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
-  ADC_RegularChannelConfig(MMA7361L_ADC2, MMA7361L_ADC2_CHANNEL, 1, ADC_SampleTime_3Cycles);   
-  //---------------------------------------------------------------------------
-	
-	ADC_Init(MMA7361L_ADC3, &ADC_InitStructure);
-  // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
-  ADC_RegularChannelConfig(MMA7361L_ADC3, MMA7361L_ADC3_CHANNEL, 1, ADC_SampleTime_3Cycles);   
-  //---------------------------------------------------------------------------	
-		
-  // 使能DMA请求 after last transfer (multi-ADC mode)
-  ADC_MultiModeDMARequestAfterLastTransferCmd(ENABLE);
-	// 使能ADC DMA
-  ADC_DMACmd(MMA7361L_ADC1, ENABLE);
-	
-  // 使能ADC
-  ADC_Cmd(MMA7361L_ADC1, ENABLE);  
-  ADC_Cmd(MMA7361L_ADC2, ENABLE);
-	ADC_Cmd(MMA7361L_ADC3, ENABLE);	
-  
-  //开始adc转换，软件触发
-  ADC_SoftwareStartConv(MMA7361L_ADC1);
-  ADC_SoftwareStartConv(MMA7361L_ADC2);
-	ADC_SoftwareStartConv(MMA7361L_ADC3);
+  //ADC_Handle1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T1_CC1;
+	//使能连续转换请求
+	ADC_Handle.Init.DMAContinuousRequests = ENABLE;
+	//转换完成标志
+	ADC_Handle.Init.EOCSelection = ADC_EOC_SEQ_CONV;    
+	/* Initialize ADC peripheral according to the passed parameters */                        
+	if(HAL_ADC_Init(&ADC_Handle) != HAL_OK)
+	{
+    Error_Handler();
+  }
+  /* ### - 2 - Start calibration ############################################ */
+  if (HAL_ADCEx_Calibration_Start(&ADC_Handle, ADC_SINGLE_ENDED) != HAL_OK)
+  {
+    Error_Handler();
+  }	
+  /* ### - 3 - Channel configuration ######################################## */
+  /* Select Channel 5 to be converted */
+  ADC_Config.Channel = MMA7361L_ADC1_CHANNEL;
+	ADC_Config.Rank = ADC_RANK_CHANNEL_NUMBER; 	
+  if (HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	/* Select Channel 6 to be converted */
+  ADC_Config.Channel = MMA7361L_ADC2_CHANNEL;
+	ADC_Config.Rank = ADC_RANK_CHANNEL_NUMBER; 	
+  if (HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config) != HAL_OK)
+  {
+    Error_Handler();
+  }
+	/* Select Channel 7 to be converted */
+  ADC_Config.Channel = MMA7361L_ADC3_CHANNEL;
+	ADC_Config.Rank = ADC_RANK_CHANNEL_NUMBER; 	
+  if (HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* ### - 4 - Start conversion in DMA mode ################################# */	
+	if(HAL_ADC_Start_DMA(&ADC_Handle, (uint32_t*)&ADC_ConvertedValue,1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 }
 
 
-void MMA7361L_Init(void)
+void MMA7361L_Config(void)
 {
 	MMA7361L_ADC_GPIO_Config();
 	MMA7361L_ADC_Mode_Config();

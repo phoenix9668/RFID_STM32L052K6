@@ -15,32 +15,30 @@
 #ifndef _BSP_SPI_H_
 #define _BSP_SPI_H_
 
-#include "stm32f4xx_conf.h"
+#include "stm32l0xx.h"
 #include "./cc1101/cc1101.h"
-
+#include "./usart/bsp_debug_usart.h"
+extern void Error_Handler(void);
 /**
   * @brief  CC1101 SPI Interface pins
   */
-#define CC1101_SPI                      SPI2
-#define CC1101_SPI_CLK                  RCC_APB1Periph_SPI2
+#define CC1101_SPI                      SPI1
+#define CC1101_SPI_CLK_ENABLE()  				__HAL_RCC_SPI1_CLK_ENABLE()
 
-#define CC1101_SPI_SCK_PIN              GPIO_Pin_13                 /* PB.13 */
+#define CC1101_SPI_SCK_PIN              GPIO_PIN_3                 	/* PB.3 */
 #define CC1101_SPI_SCK_GPIO_PORT        GPIOB                       /* GPIOB */
-#define CC1101_SPI_SCK_GPIO_CLK         RCC_AHB1Periph_GPIOB
-#define CC1101_SPI_SCK_SOURCE           GPIO_PinSource13
-#define CC1101_SPI_SCK_AF               GPIO_AF_SPI2
+#define CC1101_SPI_SCK_GPIO_CLK_ENABLE()		__HAL_RCC_GPIOB_CLK_ENABLE()
+#define CC1101_SPI_SCK_AF               GPIO_AF0_SPI1
 
-#define CC1101_SPI_MISO_PIN             GPIO_Pin_14                 /* PB.14 */
+#define CC1101_SPI_MISO_PIN             GPIO_PIN_4                 	/* PB.4 */
 #define CC1101_SPI_MISO_GPIO_PORT       GPIOB                       /* GPIOB */
-#define CC1101_SPI_MISO_GPIO_CLK        RCC_AHB1Periph_GPIOB
-#define CC1101_SPI_MISO_SOURCE          GPIO_PinSource14
-#define CC1101_SPI_MISO_AF              GPIO_AF_SPI2
+#define CC1101_SPI_MISO_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOB_CLK_ENABLE()
+#define CC1101_SPI_MISO_AF              GPIO_AF0_SPI1
 
-#define CC1101_SPI_MOSI_PIN             GPIO_Pin_15                 /* PB.15 */
+#define CC1101_SPI_MOSI_PIN             GPIO_PIN_5                 	/* PB.5 */
 #define CC1101_SPI_MOSI_GPIO_PORT       GPIOB                       /* GPIOB */
-#define CC1101_SPI_MOSI_GPIO_CLK        RCC_AHB1Periph_GPIOB
-#define CC1101_SPI_MOSI_SOURCE          GPIO_PinSource15
-#define CC1101_SPI_MOSI_AF              GPIO_AF_SPI2
+#define CC1101_SPI_MOSI_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOB_CLK_ENABLE()
+#define CC1101_SPI_MOSI_AF              GPIO_AF0_SPI1
 
 /*===========================================================================
 ------------------------------Internal IMPORT functions----------------------
@@ -49,63 +47,53 @@ you must offer the following functions for this module
 2. CC1101_CSN_LOW();                        // Pull down the CSN line
 3. CC1101_CSN_HIGH();                       // Pull up the CSN Line
 ===========================================================================*/
-// CC1101相关控制引脚定义， CSN(PE2), IRQ(PE4), GDO2(PE6) 
-#define CC1101_SPI_CSN_PIN              GPIO_Pin_2                  /* PE.02 */
-#define CC1101_SPI_CSN_GPIO_PORT        GPIOE                       /* GPIOE */
-#define CC1101_SPI_CSN_GPIO_CLK         RCC_AHB1Periph_GPIOE
+// CC1101相关控制引脚定义， CSN(PA15), IRQ(PB7), GDO2(PB6)
+#define CC1101_SPI_CSN_PIN              GPIO_PIN_15                	/* PA.15 */
+#define CC1101_SPI_CSN_GPIO_PORT        GPIOA                       /* GPIOA */
+#define CC1101_SPI_CSN_GPIO_CLK_ENABLE()		__HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define CC1101_IRQ_PIN                  GPIO_Pin_4                  /* PE.04 */
-#define CC1101_IRQ_GPIO_PORT            GPIOE                       /* GPIOE */
-#define CC1101_IRQ_GPIO_CLK             RCC_AHB1Periph_GPIOE
+#define CC1101_IRQ_PIN                  GPIO_PIN_4                  /* PB.07 */
+#define CC1101_IRQ_GPIO_PORT            GPIOB                       /* GPIOB */
+#define CC1101_IRQ_GPIO_CLK_ENABLE() 		__HAL_RCC_GPIOB_CLK_ENABLE()
 
-#define CC1101_GDO2_PIN                 GPIO_Pin_6                  /* PE.06 */
-#define CC1101_GDO2_GPIO_PORT           GPIOE                       /* GPIOE */
-#define CC1101_GDO2_GPIO_CLK            RCC_AHB1Periph_GPIOE
-#define CC1101_GDO2_EXTI_PORTSOURCE  		EXTI_PortSourceGPIOE
-#define CC1101_GDO2_EXTI_PINSOURCE    	EXTI_PinSource6
-#define CC1101_GDO2_EXTI_LINE         	EXTI_Line6
+#define CC1101_GDO2_PIN                 GPIO_PIN_6                  /* PB.06 */
+#define CC1101_GDO2_GPIO_PORT           GPIOB                       /* GPIOB */
+#define CC1101_GDO2_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOB_CLK_ENABLE()
 #define CC1101_GDO2_EXTI_IRQ          	EXTI9_5_IRQn
 #define CC1101_GDO2_IRQHandler         	EXTI9_5_IRQHandler
 
-#define CC1101_CSN_LOW()                GPIO_ResetBits(CC1101_SPI_CSN_GPIO_PORT,CC1101_SPI_CSN_PIN)
+#define CC1101_CSN_LOW()                HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET)
 
-#define CC1101_CSN_HIGH()               GPIO_SetBits(CC1101_SPI_CSN_GPIO_PORT,CC1101_SPI_CSN_PIN)
+#define CC1101_CSN_HIGH()               HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_SET)
 
-#define CC1101_IRQ_READ()               GPIO_ReadInputDataBit(CC1101_IRQ_GPIO_PORT,CC1101_IRQ_PIN)
+#define CC1101_IRQ_READ()               HAL_GPIO_ReadPin(CC1101_IRQ_GPIO_PORT, CC1101_IRQ_PIN)
 
-#define CC1101_GDO2_READ()             	GPIO_ReadInputDataBit(CC1101_GDO2_GPIO_PORT,CC1101_GDO2_PIN)
+#define CC1101_GDO2_READ()             	HAL_GPIO_ReadPin(CC1101_GDO2_GPIO_PORT, CC1101_GDO2_PIN)
 
 /**
   * @brief  LED Interface pins
   */
-#define LED3_Orange_PIN     GPIO_Pin_13
-#define LED4_Green_PIN      GPIO_Pin_12
-#define LED5_Red_PIN        GPIO_Pin_14
-#define	LED6_Blue_PIN       GPIO_Pin_15
-#define	LED_GPIO_PORT       GPIOD
-#define	LED_GPIO_CLK        RCC_AHB1Periph_GPIOD
+#define LED_RED_PIN        							GPIO_PIN_12
+#define	LED_GPIO_PORT      	 						GPIOA
+#define	LED_GPIO_CLK_ENABLE()        		__HAL_RCC_GPIOA_CLK_ENABLE()
+
+/* 直接操作寄存器的方法控制IO */
+#define	digitalHi(p,i)									{p->BSRR=i;}			  						//设置为高电平
+#define digitalLo(p,i)									{p->BSRR=(uint32_t)i << 16;}		//输出低电平
+#define digitalToggle(p,i)							{p->ODR ^=i;}										//输出反转状态
 
 // LED操作函数，(ON)打开, (OFF)关闭，(TOG)翻转
-#define LED3_Orange_OFF()   GPIO_ResetBits(LED_GPIO_PORT,LED3_Orange_PIN)        
-#define LED3_Orange_ON()    GPIO_SetBits(LED_GPIO_PORT,LED3_Orange_PIN)
-#define LED3_Orange_TOG()   GPIO_ToggleBits(LED_GPIO_PORT,LED3_Orange_PIN)
+#define LED_Red_OFF()      							HAL_GPIO_WritePin(LED_GPIO_PORT, LED_RED_PIN, GPIO_PIN_RESET)        
+#define LED_Red_ON()       							HAL_GPIO_WritePin(LED_GPIO_PORT, LED_RED_PIN, GPIO_PIN_SET)
+#define LED_Red_TOG()      							digitalToggle(LED_GPIO_PORT,LED_RED_PIN)
 
-#define LED4_Green_OFF()    GPIO_ResetBits(LED_GPIO_PORT,LED4_Green_PIN)        
-#define LED4_Green_ON()     GPIO_SetBits(LED_GPIO_PORT,LED4_Green_PIN)
-#define LED4_Green_TOG()    GPIO_ToggleBits(LED_GPIO_PORT,LED4_Green_PIN)
+void GPIO_Config(void);                // 初始化通用IO端口
+void SPI_Config(void);                 // 初始化SPI
 
-#define LED5_Red_OFF()      GPIO_ResetBits(LED_GPIO_PORT,LED5_Red_PIN)        
-#define LED5_Red_ON()       GPIO_SetBits(LED_GPIO_PORT,LED5_Red_PIN)
-#define LED5_Red_TOG()      GPIO_ToggleBits(LED_GPIO_PORT,LED5_Red_PIN)
-
-#define LED6_Blue_OFF()     GPIO_ResetBits(LED_GPIO_PORT,LED6_Blue_PIN)        
-#define LED6_Blue_ON()      GPIO_SetBits(LED_GPIO_PORT,LED6_Blue_PIN)
-#define LED6_Blue_TOG()     GPIO_ToggleBits(LED_GPIO_PORT,LED6_Blue_PIN)
-
-void GPIO_Initial(void);                // 初始化通用IO端口
-void SPI_Initial(void);                 // 初始化SPI
-
-uint8_t SPI_ExchangeByte(SPI_TypeDef* SPIx,uint8_t input);  // 通过SPI进行数据交换 
+uint8_t SPI_ExchangeByte(uint8_t input);  // 通过SPI进行数据交换
+void SPI_SendData(SPI_HandleTypeDef *hspi, uint16_t Data);
+uint16_t SPI_ReceiveData(SPI_HandleTypeDef *hspi);
+FlagStatus SPI_GetFlagStatus(SPI_HandleTypeDef *hspi, uint16_t SPI_FLAG);
 
 #endif //_BSP_SPI_H_
 

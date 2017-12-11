@@ -13,158 +13,114 @@
   */ 
 
 #include "./spi/bsp_spi.h"
-#include "./usart/bsp_debug_usart.h"
 
- /**
-  * @brief  配置嵌套向量中断控制器NVIC
-  * @param  无
-  * @retval 无
-  */
-//static void NVIC_Configuration(void)
-//{
-//  NVIC_InitTypeDef NVIC_InitStructure;
-//  
-//  /* 配置NVIC为优先级组1 */
-//  NVIC_PriorityGroupConfig(NVIC_PriorityGroup_1);
-//  
-//  /* 配置中断源：GDO2 */
-//  NVIC_InitStructure.NVIC_IRQChannel = CC1101_GDO2_EXTI_IRQ;
-//  /* 配置抢占优先级:1 */
-//  NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-//  /* 配置子优先级:1 */
-//  NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-//  /* 配置中断通道 */
-//  NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//  NVIC_Init(&NVIC_InitStructure);
-//}
+SPI_HandleTypeDef SpiHandle;
 
 /**
-  * @brief  GPIO_Initial function
+  * @brief  GPIO_Config function
   * @param  None
   * @retval None
   */
-void GPIO_Initial(void)
+void GPIO_Config(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-//		EXTI_InitTypeDef EXTI_InitStructure;
-    //开启GPIO外设时钟
-    RCC_AHB1PeriphClockCmd(LED_GPIO_CLK, ENABLE);
-    RCC_AHB1PeriphClockCmd(CC1101_IRQ_GPIO_CLK, ENABLE);
-    RCC_AHB1PeriphClockCmd(CC1101_GDO2_GPIO_CLK, ENABLE);
-    
-		//使能 SYSCFG 时钟 ,使用GPIO外部中断时必须使能SYSCFG时钟
-//		RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);  
-
-		//配置NVIC
-//		NVIC_Configuration();
 	
-    //配置LED3的GPIO引脚
-    GPIO_InitStructure.GPIO_Pin = LED3_Orange_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
-    
-    //配置LED4的GPIO引脚
-    GPIO_InitStructure.GPIO_Pin = LED4_Green_PIN;
-    GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
-
-    //配置LED5的GPIO引脚
-    GPIO_InitStructure.GPIO_Pin = LED5_Red_PIN;
-    GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
-    
-    //配置LED6的GPIO引脚
-    GPIO_InitStructure.GPIO_Pin = LED6_Blue_PIN;
-    GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
+    //开启GPIO外设时钟
+    LED_GPIO_CLK_ENABLE();
+    CC1101_IRQ_GPIO_CLK_ENABLE();
+    CC1101_GDO2_GPIO_CLK_ENABLE();
+	
+    //配置LED的GPIO引脚
+    GPIO_InitStructure.Pin = LED_RED_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
     
     //配置IRQ的GPIO引脚
-    GPIO_InitStructure.GPIO_Pin = CC1101_IRQ_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_OD;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(CC1101_IRQ_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = CC1101_IRQ_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    HAL_GPIO_Init(CC1101_IRQ_GPIO_PORT, &GPIO_InitStructure);
     
     //配置GDO2的GPIO引脚
-    GPIO_InitStructure.GPIO_Pin = CC1101_GDO2_PIN;
-    GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
+    HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
     
-//		//连接EXTI中断源到GDO2引脚
-//		SYSCFG_EXTILineConfig(CC1101_GDO2_EXTI_PORTSOURCE,CC1101_GDO2_EXTI_PINSOURCE);
-
-//		//选择EXTI中断源
-//		EXTI_InitStructure.EXTI_Line = CC1101_GDO2_EXTI_LINE;
-//		//中断模式
-//		EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt;
-//		//下降沿触发
-//		EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Rising;  
-//		//使能中断/事件线
-//		EXTI_InitStructure.EXTI_LineCmd = ENABLE;
-//		EXTI_Init(&EXTI_InitStructure);
+//    /* 配置 EXTI 中断源 到key1 引脚*/
+//    HAL_NVIC_SetPriority(CC1101_GDO2_EXTI_IRQ, 0, 0);
+//    /* 配置中断优先级 */
+//    HAL_NVIC_SetPriority(CC1101_GDO2_EXTI_IRQ, 0, 0);
+//    /* 使能中断 */
+//    HAL_NVIC_EnableIRQ(CC1101_GDO2_EXTI_IRQ);
 }
 
 /**
-  * @brief  SPI_Initial function
+  * @brief  SPI_Config function
   * @param  None
   * @retval None
   */
-void SPI_Initial(void)
+void SPI_Config(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    SPI_InitTypeDef  SPI_InitStructure;
-
-    /* Enable the SPI periph */
-    RCC_APB1PeriphClockCmd(CC1101_SPI_CLK,ENABLE);
     
     /* Enable SCK, MOSI and MISO GPIO clocks */
-    RCC_AHB1PeriphClockCmd(CC1101_SPI_SCK_GPIO_CLK | CC1101_SPI_MISO_GPIO_CLK | CC1101_SPI_MOSI_GPIO_CLK | CC1101_SPI_CSN_GPIO_CLK, ENABLE);
+    CC1101_SPI_SCK_GPIO_CLK_ENABLE();
+		CC1101_SPI_MISO_GPIO_CLK_ENABLE();
+		CC1101_SPI_MOSI_GPIO_CLK_ENABLE();
+		CC1101_SPI_CSN_GPIO_CLK_ENABLE();
 
-    /* Set Pin AF */
-    GPIO_PinAFConfig(CC1101_SPI_SCK_GPIO_PORT, CC1101_SPI_SCK_SOURCE, CC1101_SPI_SCK_AF);
-		GPIO_PinAFConfig(CC1101_SPI_MISO_GPIO_PORT, CC1101_SPI_MISO_SOURCE, CC1101_SPI_MISO_AF); 
-		GPIO_PinAFConfig(CC1101_SPI_MOSI_GPIO_PORT, CC1101_SPI_MOSI_SOURCE, CC1101_SPI_MOSI_AF); 
-    
     /* Set SPI_SCK Pin */
-    GPIO_InitStructure.GPIO_Pin = CC1101_SPI_SCK_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_DOWN;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(CC1101_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = CC1101_SPI_SCK_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+		GPIO_InitStructure.Alternate = CC1101_SPI_SCK_AF;
+    HAL_GPIO_Init(CC1101_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
     
     /* Set SPI_MISO Pin */
-    GPIO_InitStructure.GPIO_Pin = CC1101_SPI_MISO_PIN;
-    GPIO_Init(CC1101_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = CC1101_SPI_MISO_PIN;
+		GPIO_InitStructure.Alternate = CC1101_SPI_MISO_AF;
+    HAL_GPIO_Init(CC1101_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
     
     /* Set SPI_MOSI Pin */
-    GPIO_InitStructure.GPIO_Pin = CC1101_SPI_MOSI_PIN;
-    GPIO_Init(CC1101_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = CC1101_SPI_MOSI_PIN;
+		GPIO_InitStructure.Alternate = CC1101_SPI_MOSI_AF;
+    HAL_GPIO_Init(CC1101_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
     
     /* Set SPI_CSN Pin */
-    GPIO_InitStructure.GPIO_Pin = CC1101_SPI_CSN_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
-    GPIO_Init(CC1101_SPI_CSN_GPIO_PORT, &GPIO_InitStructure);
+    GPIO_InitStructure.Pin = CC1101_SPI_CSN_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    HAL_GPIO_Init(CC1101_SPI_CSN_GPIO_PORT, &GPIO_InitStructure);
     
+		/* Enable the SPI periph */
+    CC1101_SPI_CLK_ENABLE();
+		
     /* Set SPI_CSN Pin High */
     CC1101_CSN_HIGH();
     
     /* SPI configuration -------------------------------------------------------*/
-    SPI_I2S_DeInit(CC1101_SPI);
-    SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-    SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-    SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low;
-    SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge;
-    SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-    SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_64;//84MHz/32 = 3.625MHz
-    SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-    SPI_InitStructure.SPI_CRCPolynomial = 7;
-    SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-    SPI_Init(CC1101_SPI, &SPI_InitStructure);
-
-    /* Enable SPI1  */
-    SPI_Cmd(CC1101_SPI, ENABLE);    
+    SpiHandle.Instance								= CC1101_SPI;
+    SpiHandle.Init.Direction					= SPI_DIRECTION_2LINES;
+    SpiHandle.Init.DataSize						= SPI_DATASIZE_8BIT;
+    SpiHandle.Init.CLKPolarity				= SPI_POLARITY_LOW;
+    SpiHandle.Init.CLKPhase 				  = SPI_PHASE_1EDGE;
+    SpiHandle.Init.NSS 								= SPI_NSS_SOFT;
+    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_32;//2MHz/32 = 0.0625MHz
+    SpiHandle.Init.FirstBit						= SPI_FIRSTBIT_MSB;
+		SpiHandle.Init.CRCCalculation    	= SPI_CRCCALCULATION_DISABLE;
+    SpiHandle.Init.CRCPolynomial		  = 7;
+		SpiHandle.Init.TIMode            	= SPI_TIMODE_DISABLE;
+    SpiHandle.Init.Mode								= SPI_MODE_MASTER;
+		if(HAL_SPI_Init(&SpiHandle) != HAL_OK)
+		{
+			/* Initialization Error */
+			Error_Handler();
+		}
+		/* Enable SPI peripheral */
+    __HAL_SPI_ENABLE(&SpiHandle);
 
 }
 
@@ -173,14 +129,79 @@ void SPI_Initial(void)
 * 输入 ：需要写入SPI的值                                                    * 
 * 输出 ：通过SPI读出的值                                                    * 
 ============================================================================*/
-uint8_t SPI_ExchangeByte(SPI_TypeDef* SPIx,uint8_t input)
+uint8_t SPI_ExchangeByte(uint8_t input)
 {
-    SPI_SendData(SPIx,input);
-    //printf("spi send data:%x\n",input);
-	while (RESET == SPI_GetFlagStatus(SPIx,SPI_FLAG_TXE));   // 等待数据传输完成	
-	while (RESET == SPI_GetFlagStatus(SPIx,SPI_FLAG_RXNE)){}; // 等待数据接收完成
-    //printf("spi receive data:%x\n",SPI_ReceiveData(SPIx));
-	return (SPI_ReceiveData(SPIx));
+	SPI_SendData(&SpiHandle,input);
+
+//	printf("spi send data:%x\n",input);
+//	while (!(__HAL_SPI_GET_FLAG(&SpiHandle, SPI_FLAG_TXE)));   // 等待数据传输完成	
+//	while (!(__HAL_SPI_GET_FLAG(&SpiHandle, SPI_FLAG_RXNE))){}; // 等待数据接收完成
+	while (RESET == SPI_GetFlagStatus(&SpiHandle,SPI_FLAG_TXE));   // 等待数据传输完成	
+	while (RESET == SPI_GetFlagStatus(&SpiHandle,SPI_FLAG_RXNE)){}; // 等待数据接收完成	
+
+//	printf("spi receive data:%x\n",SPI_ReceiveData(&SpiHandle));
+	return (SPI_ReceiveData(&SpiHandle));
+}
+
+/**
+  * @brief  Transmits a Data through the SPIx peripheral.
+  * @param  hspi: To select the SPIx peripheral, where x can be: 1, 2 or 3 
+  *         in SPI mode.   
+  * @param  Data: Data to be transmitted.
+  * @retval None
+  */
+void SPI_SendData(SPI_HandleTypeDef *hspi, uint16_t Data)
+{
+  /* Check the parameters */
+  assert_param(IS_SPI_ALL_INSTANCE(hspi->Instance));
+  
+  /* Write in the DR register the data to be sent */
+  hspi->Instance->DR = Data;
+}
+
+/**
+  * @brief  Returns the most recent received data by the SPIx peripheral. 
+  * @param  SPIx: To select the SPIx/I2Sx peripheral, where x can be: 1, 2 or 3 
+  *         in SPI mode. 
+  * @retval The value of the received data.
+  */
+uint16_t SPI_ReceiveData(SPI_HandleTypeDef *hspi)
+{
+  /* Check the parameters */
+  assert_param(IS_SPI_ALL_INSTANCE(hspi->Instance));
+  
+  /* Return the data in the DR register */
+  return hspi->Instance->DR;
+}
+
+/** @brief  Check whether the specified SPI flag is set or not.
+  * @param  hspi specifies the SPI Handle.
+  *         This parameter can be SPI where x: 1, 2, or 3 to select the SPI peripheral.
+  * @param  SPI_FLAG specifies the flag to check.
+  *         This parameter can be one of the following values:
+  *            @arg SPI_FLAG_RXNE: Receive buffer not empty flag
+  *            @arg SPI_FLAG_TXE: Transmit buffer empty flag
+  * @retval The new state of SPI_FLAG (SET or RESET).
+  */
+FlagStatus SPI_GetFlagStatus(SPI_HandleTypeDef *hspi, uint16_t SPI_FLAG)
+{
+  FlagStatus bitstatus = RESET;
+  /* Check the parameters */
+  assert_param(IS_SPI_ALL_INSTANCE(hspi->Instance));
+  
+  /* Check the status of the specified SPI flag */
+  if ((hspi->Instance->SR & SPI_FLAG) != (uint16_t)RESET)
+  {
+    /* SPI_FLAG is set */
+    bitstatus = SET;
+  }
+  else
+  {
+    /* SPI_FLAG is reset */
+    bitstatus = RESET;
+  }
+  /* Return the SPI_FLAG status */
+  return  bitstatus;
 }
 
 /******************* END OF FILE ******************/

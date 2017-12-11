@@ -190,8 +190,8 @@ uint8_t CC1101ReadReg(uint8_t addr)
 {
     uint8_t i;
     CC1101_CSN_LOW();
-    SPI_ExchangeByte(CC1101_SPI, addr | READ_SINGLE);
-    i = SPI_ExchangeByte(CC1101_SPI, 0xFF );
+    SPI_ExchangeByte(addr | READ_SINGLE);
+    i = SPI_ExchangeByte(0xFF);
     CC1101_CSN_HIGH();
     return i;
 }
@@ -209,11 +209,11 @@ void CC1101ReadMultiReg(uint8_t addr, uint8_t *buff, uint8_t size)
 {
     uint8_t i, j;
     CC1101_CSN_LOW();
-    SPI_ExchangeByte(CC1101_SPI, addr | READ_BURST);
+    SPI_ExchangeByte(addr | READ_BURST);
     for(i=0; i<size; i++)
     {
         for(j=0; j<20; j++);
-        *(buff+i)=SPI_ExchangeByte(CC1101_SPI, 0xFF);
+        *(buff+i)=SPI_ExchangeByte(0xFF);
     }
     CC1101_CSN_HIGH();
 }
@@ -229,8 +229,8 @@ uint8_t CC1101ReadStatus(uint8_t addr)
 {
     uint8_t i;
     CC1101_CSN_LOW();
-    SPI_ExchangeByte(CC1101_SPI, addr | READ_BURST);
-    i = SPI_ExchangeByte(CC1101_SPI, 0xFF );
+    SPI_ExchangeByte(addr | READ_BURST);
+    i = SPI_ExchangeByte(0xFF );
     CC1101_CSN_HIGH();
     return i;
 }
@@ -267,8 +267,8 @@ OUTPUT   : None
 void CC1101WriteReg(uint8_t addr, uint8_t value)
 {
     CC1101_CSN_LOW();
-    SPI_ExchangeByte(CC1101_SPI, addr);
-    SPI_ExchangeByte(CC1101_SPI, value);
+    SPI_ExchangeByte(addr);
+    SPI_ExchangeByte(value);
     CC1101_CSN_HIGH();
 }
 /*
@@ -285,10 +285,10 @@ void CC1101WriteMultiReg(uint8_t addr, uint8_t *buff, uint8_t size)
 {
     uint8_t i;
     CC1101_CSN_LOW();
-    SPI_ExchangeByte(CC1101_SPI, addr | WRITE_BURST);
+    SPI_ExchangeByte(addr | WRITE_BURST);
     for(i=0; i<size; i++)
     {
-        SPI_ExchangeByte(CC1101_SPI, *(buff+i));
+        SPI_ExchangeByte(*(buff+i));
     }
     CC1101_CSN_HIGH();
 }
@@ -303,7 +303,7 @@ OUTPUT   : None
 void CC1101WriteCmd(uint8_t command)
 {
     CC1101_CSN_LOW();
-    SPI_ExchangeByte(CC1101_SPI, command);
+    SPI_ExchangeByte(command);
     CC1101_CSN_HIGH();
 }
 /*
@@ -399,8 +399,8 @@ void CC1101SendPacket(uint8_t *txbuffer, uint8_t size, TX_DATA_MODE mode)
     
     CC1101SetTRMode(TX_MODE);
     //i = CC1101ReadStatus( CC1101_TXBYTES );//for test, TX status
-    while(GPIO_ReadInputDataBit(CC1101_IRQ_GPIO_PORT, CC1101_IRQ_PIN) != 0);
-    while(GPIO_ReadInputDataBit(CC1101_IRQ_GPIO_PORT, CC1101_IRQ_PIN) == 0);
+    while(CC1101_IRQ_READ() != 0);
+    while(CC1101_IRQ_READ() == 0);
     //i = CC1101ReadStatus( CC1101_TXBYTES );//for test, TX status
 
     CC1101ClrTXBuff();

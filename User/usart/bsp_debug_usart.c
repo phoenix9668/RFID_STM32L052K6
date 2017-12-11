@@ -13,31 +13,11 @@
   
 #include "./usart/bsp_debug_usart.h"
 
-
- /**
-  * @brief  配置嵌套向量中断控制器NVIC
-  * @param  无
-  * @retval 无
-  */
-//static void NVIC_Configuration(void)
-//{
-//    NVIC_InitTypeDef NVIC_InitStructure;
-//  
-//    /* 嵌套向量中断控制器组选择 */
-//    NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);
-//  
-//    /* 配置USART为中断源 */
-//    NVIC_InitStructure.NVIC_IRQChannel = DEBUG_USART_IRQ;
-//    /* 抢断优先级为1 */
-//    NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = 1;
-//    /* 子优先级为1 */
-//    NVIC_InitStructure.NVIC_IRQChannelSubPriority = 1;
-//    /* 使能中断 */
-//    NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-//    /* 初始化配置NVIC */
-//    NVIC_Init(&NVIC_InitStructure);
-//}
-
+UART_HandleTypeDef UartHandle;
+uint8_t Rxflag=0;
+uint8_t ucTemp;
+uint8_t ucaRxBuf[256];
+uint16_t usRxCount=0;
 
  /**
   * @brief  DEBUG_USART GPIO 配置,工作模式配置。115200 8-N-1 ，中断接收模式
@@ -47,122 +27,142 @@
 void Debug_USART_Config(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-    USART_InitTypeDef USART_InitStructure;
 		
-    RCC_AHB1PeriphClockCmd(DEBUG_USART_RX_GPIO_CLK | DEBUG_USART_TX_GPIO_CLK,ENABLE);
-
-    /* 使能 USART 时钟 */
-    RCC_APB1PeriphClockCmd(DEBUG_USART_CLK, ENABLE);
-  
-    /* GPIO初始化 */
-    GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
-    GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;  
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  
-    /* 配置Tx引脚为复用功能  */
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Pin = DEBUG_USART_TX_PIN  ;  
-    GPIO_Init(DEBUG_USART_TX_GPIO_PORT, &GPIO_InitStructure);
-
-    /* 配置Rx引脚为复用功能 */
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF;
-    GPIO_InitStructure.GPIO_Pin = DEBUG_USART_RX_PIN;
-    GPIO_Init(DEBUG_USART_RX_GPIO_PORT, &GPIO_InitStructure);
-  
-    /* 连接 PXx 到 USARTx_Tx*/
-    GPIO_PinAFConfig(DEBUG_USART_RX_GPIO_PORT, DEBUG_USART_RX_SOURCE, DEBUG_USART_RX_AF);
-
-    /*  连接 PXx 到 USARTx__Rx*/
-    GPIO_PinAFConfig(DEBUG_USART_TX_GPIO_PORT, DEBUG_USART_TX_SOURCE, DEBUG_USART_TX_AF);
-  
-    /* 配置串DEBUG_USART 模式 */
-    /* 波特率设置：DEBUG_USART_BAUDRATE */
-    USART_InitStructure.USART_BaudRate = DEBUG_USART_BAUDRATE;
-    /* 字长(数据位+校验位)：8 */
-    USART_InitStructure.USART_WordLength = USART_WordLength_8b;
-    /* 停止位：1个停止位 */
-    USART_InitStructure.USART_StopBits = USART_StopBits_1;
-    /* 校验位选择：不使用校验 */
-    USART_InitStructure.USART_Parity = USART_Parity_No;
-    /* 硬件流控制：不使用硬件流 */
-    USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
-    /* USART模式控制：同时使能接收和发送 */
-    USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
-    /* 完成USART初始化配置 */
-    USART_Init(DEBUG_USART, &USART_InitStructure); 
+		/*##-1- Enable peripherals and GPIO Clocks #################################*/
+		/* Enable GPIO TX/RX clock */
+    DEBUG_USART_RX_GPIO_CLK_ENABLE();
+		DEBUG_USART_TX_GPIO_CLK_ENABLE();
 	
-    /* 嵌套向量中断控制器NVIC配置 */
-    //NVIC_Configuration();
+    /* Enable USART2 clock */
+    DEBUG_USART_CLK_ENABLE();
   
-    /* 使能串口接收中断 */
-    //USART_ITConfig(DEBUG_USART, USART_IT_RXNE, ENABLE);
-	
-    /* 使能串口 */
-    USART_Cmd(DEBUG_USART, ENABLE);
+		/*##-2- Configure peripheral GPIO ##########################################*/  
+		/* UART TX GPIO pin configuration  */
+    GPIO_InitStructure.Pull = GPIO_NOPULL;  
+    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+  
+    GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+    GPIO_InitStructure.Pin = DEBUG_USART_TX_PIN;
+		GPIO_InitStructure.Alternate = DEBUG_USART_TX_AF;  
+    HAL_GPIO_Init(DEBUG_USART_TX_GPIO_PORT, &GPIO_InitStructure);
+
+		/* UART RX GPIO pin configuration  */
+    GPIO_InitStructure.Pin = DEBUG_USART_RX_PIN;
+		GPIO_InitStructure.Alternate = DEBUG_USART_RX_AF;
+    HAL_GPIO_Init(DEBUG_USART_RX_GPIO_PORT, &GPIO_InitStructure);
+
+		/*##-3- Configure the UART peripheral ######################################*/
+		/* Put the USART peripheral in the Asynchronous mode (UART Mode) */
+		/* UART1 configured as follow:
+				- Word Length = 8 Bits
+				- Stop Bit = One Stop bit
+				- Parity = None
+				- BaudRate = 115200 baud
+				- Hardware flow control disabled (RTS and CTS signals) */
+		UartHandle.Instance = DEBUG_USART;
+    UartHandle.Init.BaudRate = DEBUG_USART_BAUDRATE;
+    UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+    UartHandle.Init.StopBits = UART_STOPBITS_1;
+    UartHandle.Init.Parity = UART_PARITY_NONE;
+    UartHandle.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+    UartHandle.Init.Mode = UART_MODE_TX_RX;
+		UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
+		
+		if(HAL_UART_Init(&UartHandle) != HAL_OK)
+		{
+			Error_Handler();
+		}
+
+		/*##-4- Configure the NVIC for UART ########################################*/
+		/* NVIC for USART3 */
+		HAL_NVIC_SetPriority(DEBUG_USART_IRQ, 0, 1);
+		HAL_NVIC_EnableIRQ(DEBUG_USART_IRQ);
+		/*配置串口接收中断 */
+    __HAL_UART_ENABLE_IT(&UartHandle,UART_IT_RXNE);
 }
 
 /*****************  发送一个字符 **********************/
-void Usart_SendByte(USART_TypeDef *pUSARTx, uint8_t ch)
+void Usart_SendByte(UART_HandleTypeDef *huart, uint8_t ch)
 {
-	/* 发送一个字节数据到USART */
-	USART_SendData(pUSARTx, ch);
-		
-	/* 等待发送数据寄存器为空 */
-	while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);	
+		/* 发送一个字节数据到串口DEBUG_USART */
+		HAL_UART_Transmit(huart, (uint8_t *)&ch, 1, 1000);
 }
 
 /*****************  发送字符串 **********************/
-void Usart_SendString(USART_TypeDef *pUSARTx, char *str)
+void Usart_SendString(UART_HandleTypeDef *huart, uint8_t *str)
 {
-	unsigned int k=0;
-  do 
-  {
-      Usart_SendByte(pUSARTx, *(str + k));
+		unsigned int k=0;
+		do 
+		{
+      HAL_UART_Transmit(huart, (uint8_t *)(str + k), 1, 1000);
       k++;
-  } while(*(str+k) != '\0');
-  
-  /* 等待发送完成 */
-  while(USART_GetFlagStatus(pUSARTx, USART_FLAG_TC) == RESET)
-  {}
+		} while(*(str+k) != '\0');
 }
 
 /*****************  发送一个16位数 **********************/
-void Usart_SendHalfWord(USART_TypeDef *pUSARTx, uint16_t ch)
+void Usart_SendHalfWord(UART_HandleTypeDef *huart, uint16_t ch)
 {
-	uint8_t temp_h, temp_l;
+		uint8_t temp_h, temp_l;
 	
-	/* 取出高八位 */
-	temp_h = (ch&0XFF00)>>8;
-	/* 取出低八位 */
-	temp_l = ch&0XFF;
+		/* 取出高八位 */
+		temp_h = (ch&0XFF00)>>8;
+		/* 取出低八位 */
+		temp_l = ch&0XFF;
 	
-	/* 发送高八位 */
-	USART_SendData(pUSARTx, temp_h);	
-	while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);
+		/* 发送高八位 */
+		HAL_UART_Transmit(huart, (uint8_t *)&temp_h, 1, 1000);
 	
-	/* 发送低八位 */
-	USART_SendData(pUSARTx, temp_l);	
-	while (USART_GetFlagStatus(pUSARTx, USART_FLAG_TXE) == RESET);	
+		/* 发送低八位 */
+		HAL_UART_Transmit(huart, (uint8_t *)&temp_l, 1, 1000);
 }
 
 ///重定向c库函数printf到串口，重定向后可使用printf函数
 int fputc(int ch, FILE *f)
 {
-		/* 发送一个字节数据到串口 */
-		USART_SendData(DEBUG_USART, (uint8_t)ch);
-		
-		/* 等待发送完毕 */
-		while (USART_GetFlagStatus(DEBUG_USART, USART_FLAG_TXE) == RESET);		
-	
+		/* 发送一个字节数据到串口DEBUG_USART */
+		HAL_UART_Transmit(&UartHandle, (uint8_t *)&ch, 1, 1000);
 		return (ch);
 }
 
 ///重定向c库函数scanf到串口，重写向后可使用scanf、getchar等函数
 int fgetc(FILE *f)
 {
+		int ch;
 		/* 等待串口输入数据 */
-		while (USART_GetFlagStatus(DEBUG_USART, USART_FLAG_RXNE) == RESET);
-
-		return (int)USART_ReceiveData(DEBUG_USART);
+    while(__HAL_UART_GET_FLAG(&UartHandle, UART_FLAG_RXNE) == RESET);
+		HAL_UART_Receive(&UartHandle, (uint8_t *)&ch, 1, 1000);	
+		return (ch);
 }
+
+void Scanf_Function(void)
+{
+//	uint8_t i;
+	if(Rxflag)
+	{
+		if (usRxCount < sizeof(ucaRxBuf))
+		{
+			ucaRxBuf[usRxCount++] = ucTemp;
+//			printf("ucTemp = %d",ucTemp);
+		}
+		else
+		{
+			usRxCount = 0;
+		}
+			
+	/* 简单的通信协议，遇到回车换行符认为1个命令帧，可自行加其它判断实现自定义命令 */
+	/* 遇到换行字符，认为接收到一个命令 */
+	if (ucTemp == 0x0A)	/* 换行字符 */
+	{		
+		/*检测到有回车字符就把数据返回给上位机*/
+		HAL_UART_Transmit( &UartHandle, (uint8_t *)ucaRxBuf, usRxCount, 1000);
+//		for(i=0; i<usRxCount; i++)
+//		{
+//			printf("ucaRxBuf = %x, usRxCount = %d",ucaRxBuf[i],usRxCount);
+//		}
+		usRxCount = 0;
+	}
+		Rxflag=0;
+	}
+}
+
 /*********************************************END OF FILE**********************/
