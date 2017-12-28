@@ -103,15 +103,12 @@ void Usart_SendString(UART_HandleTypeDef *huart, uint8_t *str)
 void Usart_SendHalfWord(UART_HandleTypeDef *huart, uint16_t ch)
 {
 		uint8_t temp_h, temp_l;
-	
 		/* 取出高八位 */
 		temp_h = (ch&0XFF00)>>8;
 		/* 取出低八位 */
 		temp_l = ch&0XFF;
-	
 		/* 发送高八位 */
 		HAL_UART_Transmit(huart, (uint8_t *)&temp_h, 1, 1000);
-	
 		/* 发送低八位 */
 		HAL_UART_Transmit(huart, (uint8_t *)&temp_l, 1, 1000);
 }

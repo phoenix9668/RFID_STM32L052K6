@@ -31,7 +31,7 @@ void GPIO_Config(void)
     CC1101_GDO2_GPIO_CLK_ENABLE();
 	
     //ÅäÖÃLEDµÄGPIOÒý½Å
-    GPIO_InitStructure.Pin = LED_RED_PIN;
+    GPIO_InitStructure.Pin = LED_GREEN_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;

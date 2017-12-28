@@ -52,15 +52,13 @@ you must offer the following functions for this module
 #define CC1101_SPI_CSN_GPIO_PORT        GPIOA                       /* GPIOA */
 #define CC1101_SPI_CSN_GPIO_CLK_ENABLE()		__HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define CC1101_IRQ_PIN                  GPIO_PIN_4                  /* PB.07 */
+#define CC1101_IRQ_PIN                  GPIO_PIN_7                  /* PB.07 */
 #define CC1101_IRQ_GPIO_PORT            GPIOB                       /* GPIOB */
 #define CC1101_IRQ_GPIO_CLK_ENABLE() 		__HAL_RCC_GPIOB_CLK_ENABLE()
 
 #define CC1101_GDO2_PIN                 GPIO_PIN_6                  /* PB.06 */
 #define CC1101_GDO2_GPIO_PORT           GPIOB                       /* GPIOB */
 #define CC1101_GDO2_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOB_CLK_ENABLE()
-#define CC1101_GDO2_EXTI_IRQ          	EXTI9_5_IRQn
-#define CC1101_GDO2_IRQHandler         	EXTI9_5_IRQHandler
 
 #define CC1101_CSN_LOW()                HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET)
 
@@ -73,7 +71,7 @@ you must offer the following functions for this module
 /**
   * @brief  LED Interface pins
   */
-#define LED_RED_PIN        							GPIO_PIN_12
+#define LED_GREEN_PIN        						GPIO_PIN_12
 #define	LED_GPIO_PORT      	 						GPIOA
 #define	LED_GPIO_CLK_ENABLE()        		__HAL_RCC_GPIOA_CLK_ENABLE()
 
@@ -83,9 +81,9 @@ you must offer the following functions for this module
 #define digitalToggle(p,i)							{p->ODR ^=i;}										//输出反转状态
 
 // LED操作函数，(ON)打开, (OFF)关闭，(TOG)翻转
-#define LED_Red_OFF()      							HAL_GPIO_WritePin(LED_GPIO_PORT, LED_RED_PIN, GPIO_PIN_RESET)        
-#define LED_Red_ON()       							HAL_GPIO_WritePin(LED_GPIO_PORT, LED_RED_PIN, GPIO_PIN_SET)
-#define LED_Red_TOG()      							digitalToggle(LED_GPIO_PORT,LED_RED_PIN)
+#define LED_GREEN_OFF()      						HAL_GPIO_WritePin(LED_GPIO_PORT, LED_GREEN_PIN, GPIO_PIN_RESET)        
+#define LED_GREEN_ON()       						HAL_GPIO_WritePin(LED_GPIO_PORT, LED_GREEN_PIN, GPIO_PIN_SET)
+#define LED_GREEN_TOG()      						digitalToggle(LED_GPIO_PORT,LED_GREEN_PIN)
 
 void GPIO_Config(void);                // 初始化通用IO端口
 void SPI_Config(void);                 // 初始化SPI

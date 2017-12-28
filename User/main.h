@@ -39,44 +39,25 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
-#include "./usart/bsp_debug_usart.h"
+#include "./function/function.h"
 #include "./tim/bsp_basic_tim.h"
-#include "./spi/bsp_spi.h"
-#include "./adc/bsp_adc.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define TX              0       // cc1101发送模式
-#define RX              1       // cc1101接收模式
-#define IDLE          	2       // cc1101空闲模式
-#define ACK_LENGTH      60   		// 反馈数据包长度 
-#define ACK_CNT					ACK_LENGTH/6	// floor(ACK_LENGTH/6)
-#define SEND_LENGTH     60      // 发送数据包长度
-#define SEND_GAP  			2 			// 发送等待1s
-#define RECV_TIMEOUT		20    	// 接收等待2s
+#define SEND_GAP  			10 			// 发送等待1s
 /* Exported macro ------------------------------------------------------------*/
 uint8_t SendFlag = 0;         	// =1发送无线数据，=0不处理
 uint16_t SendTime = 1;         	// 计数数据发送间隔时间
 uint8_t RecvFlag;       				// =1接收等待时间结束，=0不处理
 uint16_t RecvWaitTime;  				// 接收等待时间
-uint8_t CollectCnt;      				// 接收MMA7361L次数
-uint8_t	Chip_Addr	= 0;					// cc1101地址
-uint8_t	RSSI = 0;								// RSSI值
-uint16_t SendCnt = 80;       	// 发送包数
-uint16_t RecvCnt = 30;        	// 应答包数
-uint8_t SendBuffer[SEND_LENGTH] = {'0','C','h','a','n','g','e',' ','i','s',' ','a',' ','l','a','w',',',' ','a','n','d',' ','n','o',' ','a','m','o','u','n','t',' ','o','f',' ','p','r','e','t','e','n','d','i','n','g',' ','w','i','l','l',' ','a','l','t','e','r'};// 发送数据包
-uint8_t AckBuffer[ACK_LENGTH] = {'a','c','k','n','o','w','l','e','d','g','e'};// 应答数据包
-extern uint16_t ADC_ConvertedValue[MMA7361L_NOFCHANEL];// ADC转化的电压值通过MDA传递到SRAM
-float ADC_ConvertedValueLocal[MMA7361L_NOFCHANEL];// 用于保存转化计算后的电压值
 
-uint8_t temp2 = 0;//for test
+uint8_t index;							// 接收标志
+
 /* Exported functions ------------------------------------------------------- */
 static void SystemClock_Config(void);
 void Error_Handler(void);
 static void Show_Message(void);
-uint8_t	RF_Acknowledge(void);
-static void Delay(__IO uint32_t nCount);
-void MMA7361L_ReadHandler(void);
+void Delay(__IO uint32_t nCount);
 
 #endif /* __MAIN_H */
 

@@ -157,17 +157,6 @@ void BASIC_TIM_IRQHandler(void)
   HAL_TIM_IRQHandler(&TimHandle);
 }
 
-////void CC1101_GDO2_IRQHandler(void)
-////{
-////  //是否产生EXTI Line中断
-////	if(EXTI_GetITStatus(CC1101_GDO2_EXTI_LINE) != RESET) 
-////	{	
-////		LED5_Red_TOG();
-////    //清除中断标志位
-////		EXTI_ClearITPendingBit(CC1101_GDO2_EXTI_LINE);     
-////	}  
-////}
-
 /**
   * @brief  This function handles PPP interrupt request.
   * @param  None

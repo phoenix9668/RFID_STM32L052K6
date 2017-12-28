@@ -395,8 +395,6 @@ void CC1101SendPacket(uint8_t *txbuffer, uint8_t size, TX_DATA_MODE mode)
 
     CC1101WriteMultiReg(CC1101_TXFIFO, txbuffer, size);
     
-//    CC1101WriteCmd(CC1101_SIDLE); 	//**********************就是这个语句，卖家给的代码里没有**********************
-    
     CC1101SetTRMode(TX_MODE);
     //i = CC1101ReadStatus( CC1101_TXBYTES );//for test, TX status
     while(CC1101_IRQ_READ() != 0);

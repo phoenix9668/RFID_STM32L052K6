@@ -16,12 +16,12 @@ extern UART_HandleTypeDef UartHandle;
 #define RCC_UARTxCLKSOURCE_SYSCLK         			RCC_USART2CLKSOURCE_SYSCLK
 
 #define DEBUG_USART_RX_GPIO_PORT                GPIOA
-#define DEBUG_USART_RX_GPIO_CLK_ENABLE()				__HAL_RCC_GPIOD_CLK_ENABLE()
+#define DEBUG_USART_RX_GPIO_CLK_ENABLE()				__HAL_RCC_GPIOA_CLK_ENABLE()
 #define DEBUG_USART_RX_PIN                      GPIO_PIN_3
 #define DEBUG_USART_RX_AF                       GPIO_AF4_USART2
 
 #define DEBUG_USART_TX_GPIO_PORT                GPIOA
-#define DEBUG_USART_TX_GPIO_CLK_ENABLE()    		__HAL_RCC_GPIOD_CLK_ENABLE()
+#define DEBUG_USART_TX_GPIO_CLK_ENABLE()    		__HAL_RCC_GPIOA_CLK_ENABLE()
 #define DEBUG_USART_TX_PIN                      GPIO_PIN_2
 #define DEBUG_USART_TX_AF                       GPIO_AF4_USART2
 
