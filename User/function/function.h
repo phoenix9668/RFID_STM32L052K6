@@ -18,7 +18,7 @@
 #define ACK_CNT					ACK_LENGTH/6	// floor(ACK_LENGTH/6)
 #define RECV_TIMEOUT		20    	// 接收等待2s
 #define SEND_LENGTH     15			// 发送数据包长度
-#define SEND_PACKAGE_NUM	100		// 发生数据包数
+#define SEND_PACKAGE_NUM	60		// 发生数据包数
 #define RECV_LENGTH   	10			// 接收数据包长度
 /* Exported macro ------------------------------------------------------------*/
 extern uint8_t RecvFlag;      	// =1接收等待时间结束，=0不处理

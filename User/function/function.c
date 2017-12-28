@@ -8,7 +8,6 @@
 uint8_t CollectCnt;      				// 接收MMA7361L次数
 uint8_t	Chip_Addr	= 0;					// cc1101地址
 uint8_t	RSSI = 0;								// RSSI值
-uint16_t SendCnt = 80;       		// 发送包数
 uint8_t SendBuffer[SEND_LENGTH] = {0};// 发送数据包
 uint8_t RecvBuffer[RECV_LENGTH] = {0};// 接收数据包
 float ADC_ConvertedValueLocal[MMA7361L_NOFCHANEL];// 用于保存转化计算后的电压值
@@ -116,7 +115,7 @@ void RF_SendPacket(uint8_t index)
 {
 	uint8_t i=0;	
 		
-	if(index == 4 || index == 6)
+	if(index == 4)
 	{
 		SendBuffer[0] = 0xAB;
 		SendBuffer[1] = 0xCD;
@@ -127,13 +126,13 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[6] = RecvBuffer[8];
 		SendBuffer[7] = RecvBuffer[9];
 		SendBuffer[14] = RSSI;
-		for(i=0; i<SendCnt; i++)
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
 			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
-		printf("send over\r\n");
+//		printf("send over\r\n");
 	}
 	else if(index == 5)
 	{
@@ -146,7 +145,25 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[6] = RecvBuffer[8];
 		SendBuffer[7] = RecvBuffer[9];
 		SendBuffer[14] = RSSI;
-		for(i=0; i<SendCnt; i++)
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
+		{
+			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
+			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+//		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
+		}
+	}
+	else if(index == 6)
+	{
+		SendBuffer[0] = 0xAB;
+		SendBuffer[1] = 0xCD;
+		SendBuffer[2] = 0xB4;
+		SendBuffer[3] = 0xB4;
+		SendBuffer[4] = RecvBuffer[6];
+		SendBuffer[5] = RecvBuffer[7];
+		SendBuffer[6] = RecvBuffer[8];
+		SendBuffer[7] = RecvBuffer[9];
+		SendBuffer[14] = RSSI;
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
 			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
@@ -164,7 +181,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[6] = RecvBuffer[8];
 		SendBuffer[7] = RecvBuffer[9];
 		SendBuffer[14] = 0x01;
-		for(i=0; i<SendCnt; i++)
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
 			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
@@ -182,7 +199,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[6] = RecvBuffer[8];
 		SendBuffer[7] = RecvBuffer[9];
 		SendBuffer[14] = 0x02;
-		for(i=0; i<SendCnt; i++)
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
 			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
@@ -200,7 +217,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[6] = RecvBuffer[8];
 		SendBuffer[7] = RecvBuffer[9];
 		SendBuffer[14] = 0x03;
-		for(i=0; i<SendCnt; i++)
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
 			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
