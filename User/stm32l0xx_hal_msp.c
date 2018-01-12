@@ -45,6 +45,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
 #include "./tim/bsp_basic_tim.h"
+#include "./usart/bsp_debug_usart.h"
 
 /** @addtogroup STM32L0xx_HAL_Driver
   * @{
@@ -111,8 +112,28 @@ void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
 }
 
 /**
-  * @}
+  * @brief UART MSP De-Initialization 
+  *        This function frees the hardware resources used in this example:
+  *          - Disable the Peripheral's clock
+  *          - Revert GPIO and NVIC configuration to their default state
+  * @param huart: UART handle pointer
+  * @retval None
   */
+void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
+{
+  /*##-1- Reset peripherals ##################################################*/
+  DEBUG_USART_FORCE_RESET();
+  DEBUG_USART_RELEASE_RESET();
+
+  /*##-2- Disable peripherals and GPIO Clocks #################################*/
+  /* Configure UART Tx as alternate function  */
+  HAL_GPIO_DeInit(DEBUG_USART_TX_GPIO_PORT, DEBUG_USART_TX_PIN);
+  /* Configure UART Rx as alternate function  */
+  HAL_GPIO_DeInit(DEBUG_USART_RX_GPIO_PORT, DEBUG_USART_RX_PIN);
+  
+  /*##-3- Disable the NVIC for UART ##########################################*/
+  HAL_NVIC_DisableIRQ(DEBUG_USART_IRQ);
+}
 
 /**
   * @}

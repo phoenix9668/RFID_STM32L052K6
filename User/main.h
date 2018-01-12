@@ -41,17 +41,17 @@
 #include "stm32l0xx_hal.h"
 #include "./function/function.h"
 #include "./tim/bsp_basic_tim.h"
-
+ 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define SEND_GAP  			10 			// 发送等待1s
+#define SEND_GAP  			10 					// 发送等待1s
 /* Exported macro ------------------------------------------------------------*/
-uint8_t SendFlag = 0;         	// =1发送无线数据，=0不处理
-uint16_t SendTime = 1;         	// 计数数据发送间隔时间
-uint8_t RecvFlag;       				// =1接收等待时间结束，=0不处理
-uint16_t RecvWaitTime;  				// 接收等待时间
-
-uint8_t index;							// 接收标志
+uint8_t SendFlag = 0;         			// =1发送无线数据，=0不处理
+uint16_t SendTime = 1;         			// 计数数据发送间隔时间
+uint8_t RecvFlag;       						// =1接收等待时间结束，=0不处理
+uint16_t RecvWaitTime;  						// 接收等待时间
+uint32_t dataeeprom;								// 从eeprom中读出的数
+uint8_t index =0;											// 接收标志
 
 /* Exported functions ------------------------------------------------------- */
 static void SystemClock_Config(void);

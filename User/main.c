@@ -35,7 +35,8 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
+//#define MMA7361L_DEBUG
+extern uint8_t aRxBuffer[RXBUFFERSIZE];								// Buffer used for reception
 /** @addtogroup STM32L0xx_HAL_Examples
   * @{
   */
@@ -49,17 +50,15 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-
 /* Private functions ---------------------------------------------------------*/
 
 /*===========================================================================
-* 函数 : main() => 主函数，程序入口                                         *
-* 说明 : 接收一包数据，并发送应答数据																				*
+* 函数 : main() => 主函数，程序入口                                         																																*
+* 说明 : 接收一包数据，并发送应答数据																																																*
 ============================================================================*/
 int main(void)
 {
-
-  /* STM32L0xx HAL library initialization:
+	/* STM32L0xx HAL library initialization:
        - Configure the Flash prefetch, Flash preread and Buffer caches
        - Systick timer is configured by default as source of time base, but user 
              can eventually implement his proper time base source (a general purpose 
@@ -67,24 +66,26 @@ int main(void)
              duration should be kept 1ms since PPP_TIMEOUT_VALUEs are defined and 
              handled in milliseconds basis.
        - Low Level Initialization
-     */
-  HAL_Init();
+	*/
+	HAL_Init();
 
-  /* Configure the System clock to have a frequency of 32 MHz */
-  SystemClock_Config();
+	/* Configure the System clock to have a frequency of 32 MHz */
+	SystemClock_Config();
 	System_Initial();
+	#ifdef DEBUG
 	Show_Message();
+	#endif
 
-	
 	while(1)
 		{
 			index = RF_RecvHandler();
 			if(index != 0)   // 无线数据接收处理
 			{
-//				printf("receive occur\r\n");
 				RF_SendPacket(index);
 			}
-//					MMA7361L_display();
+			#ifdef MMA7361L_DEBUG
+			MMA7361L_display();
+			#endif
 		}
 }
 
@@ -102,15 +103,68 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else
 		{	RecvFlag=0;}
         
-	if(SendTime != 0)                           // 1ms时间到，置位SendFlag标志，主函数查询发送数据    
+	if(SendTime != 0)                           // 1ms时间到，置位SendFlag标志，主函数查询发送数据  
 		{ 
 			if(--SendTime == 0)    
-				{   SendTime=SEND_GAP; 
+				{	SendTime=SEND_GAP; 
 						SendFlag=1;
 						LED_GREEN_TOG();
 						MMA7361L_ReadHandler();
 				}
 		}
+}
+/**
+  * @brief  Tx Transfer completed callback
+  * @param  UartHandle: UART handle. 
+  * @note   This example shows a simple way to report end of IT Tx transfer, and 
+  *         you can add your own implementation. 
+  * @retval None
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  /* Set transmission flag: trasfer complete*/
+//  printf("trasfer complete\n");
+}
+
+/**
+  * @brief  Rx Transfer completed callback
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report end of IT Rx transfer, and 
+  *         you can add your own implementation.
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  /* Set transmission flag: trasfer complete*/
+		uint32_t data;
+		#ifdef DEBUG
+		printf("data = %x %x %x %x %x %x %x %x \n",aRxBuffer[0],aRxBuffer[1],aRxBuffer[2],aRxBuffer[3],aRxBuffer[4],aRxBuffer[5],aRxBuffer[6],aRxBuffer[7]);
+		#endif
+		/*##-1- Check UART receive data whether is ‘ABCD’ begin or not ###########################*/
+		if(aRxBuffer[0] == 0x41 && aRxBuffer[1] == 0x42 && aRxBuffer[2] == 0x43 && aRxBuffer[3] == 0x44)//输入‘ABCD’
+			{
+				data = ((uint32_t)(0xFF000000 & aRxBuffer[4]<<24)+(uint32_t)(0x00FF0000 & aRxBuffer[5]<<16)+(uint32_t)(0x0000FF00 & aRxBuffer[6]<<8)+(uint32_t)(0x000000FF & aRxBuffer[7]));
+				DATAEEPROM_Program(EEPROM_START_ADDR, data);
+				dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR);
+				#ifdef DEBUG
+				printf("eeprom program end\n");
+				printf("dataeeprom = %x\n",dataeeprom);
+				#endif
+			}
+}
+
+/**
+  * @brief  UART error callbacks
+  * @param  UartHandle: UART handle
+  * @note   This example shows a simple way to report transfer error, and you can
+  *         add your own implementation.
+  * @retval None
+  */
+ void HAL_UART_ErrorCallback(UART_HandleTypeDef *UartHandle)
+{
+		while(1)
+    {
+    }
 }
 
 /**
@@ -181,6 +235,7 @@ void Delay(__IO uint32_t nCount)
   * @param  none
   * @retval none
   */
+#ifdef DEBUG
 static void Show_Message(void)
 {   
 	printf("\r\n CC1101 chip transfer performance test program \n");
@@ -190,6 +245,7 @@ static void Show_Message(void)
 	printf(" PS: green led light when system in transfer mode\r\n");    
 	printf("     orange led light when system in receive mode\r\n");
 }
+#endif
 
 /**
   * @brief  This function is executed in case of error occurrence.
@@ -200,6 +256,7 @@ void Error_Handler(void)
 {
   /* User may add here some code to deal with this error */
   LED_GREEN_ON();
+	printf("error\n");
   while(1)
   {
   }

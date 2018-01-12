@@ -53,6 +53,11 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 extern TIM_HandleTypeDef	TimHandle;
+/* UART handler declared in "bsp_debug_usart.c" file */
+extern UART_HandleTypeDef UartHandle;
+extern uint8_t Rxflag;
+extern uint8_t ucTemp;
+extern uint8_t aRxBuffer[4];
 /* Private function prototypes -----------------------------------------------*/
 /* Private functions ---------------------------------------------------------*/
 
@@ -119,19 +124,6 @@ void SysTick_Handler(void)
   HAL_IncTick();
 }
 
-extern uint8_t Rxflag;
-extern uint8_t ucTemp;
-
-void DEBUG_USART_IRQHandler(void)
-{
-	if(__HAL_UART_GET_IT_SOURCE( &UartHandle, UART_IT_RXNE ) != RESET)
-	{
-		Rxflag=1;
-		HAL_UART_Receive(&UartHandle, (uint8_t *)&ucTemp, 1, 1000);        
-	}
-	HAL_UART_IRQHandler(&UartHandle);
-}
-
 /******************************************************************************/
 /*                 STM32L0xx Peripherals Interrupt Handlers                   */
 /*  Add here the Interrupt Handler for the used peripheral(s) (PPP), for the  */
@@ -155,6 +147,23 @@ void DEBUG_USART_IRQHandler(void)
 void BASIC_TIM_IRQHandler(void)
 {
   HAL_TIM_IRQHandler(&TimHandle);
+}
+
+/**
+  * @brief  This function handles UART interrupt request.  
+  * @param  None
+  * @retval None
+  * @Note   This function is redefined in "main.h" and related to DMA stream 
+  *         used for USART data transmission     
+  */
+void DEBUG_USART_IRQHandler(void)
+{
+//	if(__HAL_UART_GET_IT_SOURCE(&UartHandle, UART_IT_RXNE) != RESET)
+//	{
+//		Rxflag = 1;
+//		HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, 4, 1000);
+//	}
+  HAL_UART_IRQHandler(&UartHandle);
 }
 
 /**

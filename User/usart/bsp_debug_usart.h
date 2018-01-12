@@ -3,6 +3,7 @@
 
 #include "stm32l0xx.h"
 #include <stdio.h>
+//#define DEBUG
 extern void Error_Handler(void);
 extern UART_HandleTypeDef UartHandle;
 
@@ -11,6 +12,9 @@ extern UART_HandleTypeDef UartHandle;
 #define DEBUG_USART                             USART2
 #define DEBUG_USART_CLK_ENABLE()       	        __USART2_CLK_ENABLE();
 #define DEBUG_USART_BAUDRATE                    115200
+
+#define DEBUG_USART_FORCE_RESET()            		__HAL_RCC_USART2_FORCE_RESET()
+#define DEBUG_USART_RELEASE_RESET()           	__HAL_RCC_USART2_RELEASE_RESET()
 
 #define RCC_PERIPHCLK_UARTx               			RCC_PERIPHCLK_USART2
 #define RCC_UARTxCLKSOURCE_SYSCLK         			RCC_USART2CLKSOURCE_SYSCLK
@@ -34,4 +38,4 @@ void Usart_SendByte( UART_HandleTypeDef *huart, uint8_t ch);
 void Usart_SendString( UART_HandleTypeDef *huart, uint8_t *str);
 void Usart_SendHalfWord( UART_HandleTypeDef *huart, uint16_t ch);
 void Scanf_Function(void);
-#endif /* __USART1_H */
+#endif /* __DEBUG_USART_H */
