@@ -113,11 +113,11 @@ uint8_t RF_RecvHandler(void)
 				{
 					if(RecvBuffer[0] == 0xAB && RecvBuffer[1] == 0xCD)
 					{
-						if(RecvBuffer[4] == 0xB0 && RecvBuffer[5] == 0xB0)
+						if(RecvBuffer[4] == 0xC0 && RecvBuffer[5] == 0xC0)
 						{return 4;}
-						else if(RecvBuffer[4] == 0xB3 && RecvBuffer[5] == 0xB3)
+						else if(RecvBuffer[4] == 0xC3 && RecvBuffer[5] == 0xC3)
 						{return 5;}
-						else if(RecvBuffer[4] == 0xB4 && RecvBuffer[5] == 0xB4)
+						else if(RecvBuffer[4] == 0xC4 && RecvBuffer[5] == 0xC4)
 						{return 6;}
 						else
 						{	
@@ -150,13 +150,16 @@ void RF_SendPacket(uint8_t index)
 	{
 		SendBuffer[0] = 0xAB;
 		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = 0xB0;
-		SendBuffer[3] = 0xB0;
-		SendBuffer[4] = RecvBuffer[6];
-		SendBuffer[5] = RecvBuffer[7];
-		SendBuffer[6] = RecvBuffer[8];
-		SendBuffer[7] = RecvBuffer[9];
-		SendBuffer[14] = RSSI;
+		SendBuffer[2] = RecvBuffer[2];
+		SendBuffer[3] = RecvBuffer[3];
+		SendBuffer[4] = 0xD0;
+		SendBuffer[5] = 0x01;
+		SendBuffer[6] = RecvBuffer[6];
+		SendBuffer[7] = RecvBuffer[7];
+		SendBuffer[8] = RecvBuffer[8];
+		SendBuffer[9] = RecvBuffer[9];
+		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[59] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -169,13 +172,16 @@ void RF_SendPacket(uint8_t index)
 	{
 		SendBuffer[0] = 0xAB;
 		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = 0xC3;
-		SendBuffer[3] = 0x01;
-		SendBuffer[4] = RecvBuffer[6];
-		SendBuffer[5] = RecvBuffer[7];
-		SendBuffer[6] = RecvBuffer[8];
-		SendBuffer[7] = RecvBuffer[9];
-		SendBuffer[14] = RSSI;
+		SendBuffer[2] = RecvBuffer[2];
+		SendBuffer[3] = RecvBuffer[3];		
+		SendBuffer[4] = 0xD3;
+		SendBuffer[5] = 0x01;
+		SendBuffer[6] = RecvBuffer[6];
+		SendBuffer[7] = RecvBuffer[7];
+		SendBuffer[8] = RecvBuffer[8];
+		SendBuffer[9] = RecvBuffer[9];
+		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[59] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -187,13 +193,16 @@ void RF_SendPacket(uint8_t index)
 	{
 		SendBuffer[0] = 0xAB;
 		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = 0xB4;
-		SendBuffer[3] = 0xB4;
-		SendBuffer[4] = RecvBuffer[6];
-		SendBuffer[5] = RecvBuffer[7];
-		SendBuffer[6] = RecvBuffer[8];
-		SendBuffer[7] = RecvBuffer[9];
-		SendBuffer[14] = RSSI;
+		SendBuffer[2] = RecvBuffer[2];
+		SendBuffer[3] = RecvBuffer[3];		
+		SendBuffer[4] = 0xD4;
+		SendBuffer[5] = 0x01;
+		SendBuffer[6] = RecvBuffer[6];
+		SendBuffer[7] = RecvBuffer[7];
+		SendBuffer[8] = RecvBuffer[8];
+		SendBuffer[9] = RecvBuffer[9];
+		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[59] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -201,61 +210,63 @@ void RF_SendPacket(uint8_t index)
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
 	}	
-	else if(index == 1)
-	{
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = 0x01;
-		SendBuffer[3] = 0x01;
-		SendBuffer[4] = RecvBuffer[6];
-		SendBuffer[5] = RecvBuffer[7];
-		SendBuffer[6] = RecvBuffer[8];
-		SendBuffer[7] = RecvBuffer[9];
-		SendBuffer[14] = 0x01;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
-//		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
-		}
-	}
-	else if(index == 2)
-	{
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = 0x02;
-		SendBuffer[3] = 0x02;
-		SendBuffer[4] = RecvBuffer[6];
-		SendBuffer[5] = RecvBuffer[7];
-		SendBuffer[6] = RecvBuffer[8];
-		SendBuffer[7] = RecvBuffer[9];
-		SendBuffer[14] = 0x02;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
-//		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
-		}
-	}
-	else if(index == 3)
-	{
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = 0x03;
-		SendBuffer[3] = 0x03;
-		SendBuffer[4] = RecvBuffer[6];
-		SendBuffer[5] = RecvBuffer[7];
-		SendBuffer[6] = RecvBuffer[8];
-		SendBuffer[7] = RecvBuffer[9];
-		SendBuffer[14] = 0x03;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
-//		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
-		}
-	}
+//	else if(index == 1)
+//	{
+//		SendBuffer[0] = 0xAB;
+//		SendBuffer[1] = 0xCD;
+//		SendBuffer[2] = 0x01;
+//		SendBuffer[3] = 0x01;
+//		SendBuffer[4] = RecvBuffer[6];
+//		SendBuffer[5] = RecvBuffer[7];
+//		SendBuffer[6] = RecvBuffer[8];
+//		SendBuffer[7] = RecvBuffer[9];
+//		SendBuffer[14] = 0x01;
+//		for(i=0; i<SEND_PACKAGE_NUM; i++)
+//		{
+//			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
+//			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+////		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
+//		}
+//	}
+//	else if(index == 2)
+//	{
+//		SendBuffer[0] = 0xAB;
+//		SendBuffer[1] = 0xCD;
+//		SendBuffer[2] = 0x02;
+//		SendBuffer[3] = 0x02;
+//		SendBuffer[4] = RecvBuffer[6];
+//		SendBuffer[5] = RecvBuffer[7];
+//		SendBuffer[6] = RecvBuffer[8];
+//		SendBuffer[7] = RecvBuffer[9];
+//		SendBuffer[14] = 0x02;
+//		for(i=0; i<SEND_PACKAGE_NUM; i++)
+//		{
+//			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
+//			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+////		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
+//		}
+//	}
+//	else if(index == 3)
+//	{
+//		SendBuffer[0] = 0xAB;
+//		SendBuffer[1] = 0xCD;
+//		SendBuffer[2] = 0x03;
+//		SendBuffer[3] = 0x03;
+//		SendBuffer[4] = RecvBuffer[6];
+//		SendBuffer[5] = RecvBuffer[7];
+//		SendBuffer[6] = RecvBuffer[8];
+//		SendBuffer[7] = RecvBuffer[9];
+//		SendBuffer[14] = 0x03;
+//		for(i=0; i<SEND_PACKAGE_NUM; i++)
+//		{
+//			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
+//			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+////		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
+//		}
+//	}
 
+	for(i=0; i<SEND_LENGTH; i++) // clear array
+	{SendBuffer[i] = 0;}
 //	Usart_SendString(&UartHandle, (uint8_t *)"Transmit OK\r\n");
 	CC1101SetIdle();																	// 空闲模式，以转到sleep状态
 	CC1101WORInit();																	// 初始化电磁波激活功能
@@ -270,13 +281,22 @@ void MMA7361L_ReadHandler(void)
 	MMA7361L_GS_1G5();
 	MMA7361L_SL_OFF();
 	Delay(0x3FFF);
-	SendBuffer[8] = (uint8_t)(0xFF & ADC_ConvertedValue[0]);
-	SendBuffer[9] = (uint8_t)(0x0F & (ADC_ConvertedValue[0]>>8));
-	SendBuffer[10] = (uint8_t)(0xFF & ADC_ConvertedValue[1]);
-	SendBuffer[11] = (uint8_t)(0xFF & (ADC_ConvertedValue[1]>>8));
-	SendBuffer[12] = (uint8_t)(0xFF & ADC_ConvertedValue[2]);
-	SendBuffer[13] = (uint8_t)(0xFF & (ADC_ConvertedValue[2]>>8));
+	if(CollectCnt < ACK_CNT)
+	{
+		SendBuffer[CollectCnt*6 + 10] = (uint8_t)(0xFF & ADC_ConvertedValue[0]);
+		SendBuffer[CollectCnt*6 + 11] = (uint8_t)((0x0F & (ADC_ConvertedValue[0]>>8)) + (0xF0 & ((uint8_t)CollectCnt<<4)));
+		SendBuffer[CollectCnt*6 + 12] = (uint8_t)(0xFF & ADC_ConvertedValue[1]);
+		SendBuffer[CollectCnt*6 + 13] = (uint8_t)(0xFF & (ADC_ConvertedValue[1]>>8));
+		SendBuffer[CollectCnt*6 + 14] = (uint8_t)(0xFF & ADC_ConvertedValue[2]);
+		SendBuffer[CollectCnt*6 + 15] = (uint8_t)(0xFF & (ADC_ConvertedValue[2]>>8));
+	}
   MMA7361L_SL_ON();
+	CollectCnt++;
+//	printf("CollectCnt = %d\r\n", CollectCnt-1);
+	if(CollectCnt == ACK_CNT)
+	{
+		CollectCnt = 0;
+	}
 }
 
 /*===========================================================================

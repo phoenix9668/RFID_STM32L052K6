@@ -17,9 +17,9 @@
 #define RX              	1       	// cc1101接收模式
 #define IDLE          		2       	// cc1101空闲模式
 #define ACK_LENGTH      	60   		// 反馈数据包长度 
-#define ACK_CNT				ACK_LENGTH/6	// floor(ACK_LENGTH/6)
-#define RECV_TIMEOUT		20    		// 接收等待2s
-#define SEND_LENGTH     	15			// 发送数据包长度
+#define ACK_CNT				ACK_LENGTH/6-2	// floor(ACK_LENGTH/6)-2
+#define RECV_TIMEOUT			20    		// 接收等待2s
+#define SEND_LENGTH     	60			// 发送数据包长度
 #define SEND_PACKAGE_NUM	60			// 发生数据包数
 #define RECV_LENGTH   		10			// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/

@@ -103,7 +103,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else
 		{	RecvFlag=0;}
         
-	if(SendTime != 0)                           // 1ms时间到，置位SendFlag标志，主函数查询发送数据  
+	if(SendTime != 0)                           // 0.1s时间到，置位SendFlag标志，主函数查询发送数据  
 		{ 
 			if(--SendTime == 0)    
 				{	SendTime=SEND_GAP; 
