@@ -11,7 +11,7 @@
 
 /* Exported types ------------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-#define RXBUFFERSIZE  		8					// Size of Reception buffer
+#define RXBUFFERSIZE  		12					// Size of Reception buffer
 #define EEPROM_START_ADDR   0x08080000   /* Start @ of user eeprom area */
 #define TX              	0       	// cc1101发送模式
 #define RX              	1       	// cc1101接收模式
@@ -21,7 +21,7 @@
 #define RECV_TIMEOUT			20    		// 接收等待2s
 #define SEND_LENGTH     	60			// 发送数据包长度
 #define SEND_PACKAGE_NUM	60			// 发生数据包数
-#define RECV_LENGTH   		10			// 接收数据包长度
+#define RECV_LENGTH   		18			// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 extern uint8_t RecvFlag;      	// =1接收等待时间结束，=0不处理

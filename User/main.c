@@ -137,18 +137,27 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
   /* Set transmission flag: trasfer complete*/
 		uint32_t data;
+		uint8_t addr_eeprom;// 从eeprom中读出的数
+		uint16_t sync_eeprom;
+		uint32_t rfid_eeprom;
 		#ifdef DEBUG
-		printf("data = %x %x %x %x %x %x %x %x \n",aRxBuffer[0],aRxBuffer[1],aRxBuffer[2],aRxBuffer[3],aRxBuffer[4],aRxBuffer[5],aRxBuffer[6],aRxBuffer[7]);
+		printf("data = %x %x %x %x %x %x %x %x %x %x %x %x \n",aRxBuffer[0],aRxBuffer[1],aRxBuffer[2],aRxBuffer[3],aRxBuffer[4],aRxBuffer[5],aRxBuffer[6],aRxBuffer[7],aRxBuffer[8],aRxBuffer[9],aRxBuffer[10],aRxBuffer[11]);
 		#endif
 		/*##-1- Check UART receive data whether is ‘ABCD’ begin or not ###########################*/
 		if(aRxBuffer[0] == 0x41 && aRxBuffer[1] == 0x42 && aRxBuffer[2] == 0x43 && aRxBuffer[3] == 0x44)//输入‘ABCD’
 			{
 				data = ((uint32_t)(0xFF000000 & aRxBuffer[4]<<24)+(uint32_t)(0x00FF0000 & aRxBuffer[5]<<16)+(uint32_t)(0x0000FF00 & aRxBuffer[6]<<8)+(uint32_t)(0x000000FF & aRxBuffer[7]));
 				DATAEEPROM_Program(EEPROM_START_ADDR, data);
-				dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR);
+				data = ((uint32_t)(0xFF000000 & aRxBuffer[8]<<24)+(uint32_t)(0x00FF0000 & aRxBuffer[9]<<16)+(uint32_t)(0x0000FF00 & aRxBuffer[10]<<8)+(uint32_t)(0x000000FF & aRxBuffer[11]));
+				DATAEEPROM_Program(EEPROM_START_ADDR+4, data);
+				addr_eeprom = (uint8_t)(0xff & DATAEEPROM_Read(EEPROM_START_ADDR)>>16); 
+				sync_eeprom = (uint16_t)(0xffff & DATAEEPROM_Read(EEPROM_START_ADDR));
+				rfid_eeprom	= DATAEEPROM_Read(EEPROM_START_ADDR+4);
 				#ifdef DEBUG
 				printf("eeprom program end\n");
-				printf("dataeeprom = %x\n",dataeeprom);
+				printf("addr_eeprom = %x\n",addr_eeprom);
+				printf("sync_eeprom = %x\n",sync_eeprom);
+				printf("rfid_eeprom = %x\n",rfid_eeprom);
 				#endif
 			}
 }
@@ -164,6 +173,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
 		while(1)
     {
+			LED_GREEN_ON();
     }
 }
 

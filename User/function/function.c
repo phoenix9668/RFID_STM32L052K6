@@ -57,21 +57,26 @@ void System_Initial(void)
 {
 		uint8_t addr_eeprom;
 		uint16_t sync_eeprom;
+		uint32_t rfid_eeprom;
 		/*##-1- initial all peripheral ###########################*/
     MCU_Initial(); 
 		/*##-2- initial CC1101 peripheral,configure it's address and sync code ###########################*/
 		addr_eeprom = (uint8_t)(0xff & DATAEEPROM_Read(EEPROM_START_ADDR)>>16); 
 		sync_eeprom = (uint16_t)(0xffff & DATAEEPROM_Read(EEPROM_START_ADDR)); 
+		rfid_eeprom	= DATAEEPROM_Read(EEPROM_START_ADDR+4);
 		#ifdef DEBUG
 		printf("addr_eeprom = %x\n",addr_eeprom);
 		printf("sync_eeprom = %x\n",sync_eeprom);
+		printf("rfid_eeprom = %x\n",rfid_eeprom);
 		#endif
     RF_Initial(addr_eeprom, sync_eeprom, IDLE);     // 初始化无线芯片，空闲模式
+		#ifdef UART_PROG
 		/*##-3- Put UART peripheral in reception process ###########################*/
 		if(HAL_UART_Receive_IT(&UartHandle, (uint8_t *)aRxBuffer, RXBUFFERSIZE) != HAL_OK)
 		{
 			Error_Handler();
 		}
+		#endif
 }
 
 /*===========================================================================
@@ -119,6 +124,8 @@ uint8_t RF_RecvHandler(void)
 						{return 5;}
 						else if(RecvBuffer[4] == 0xC4 && RecvBuffer[5] == 0xC4)
 						{return 6;}
+						else if(RecvBuffer[4] == 0xC5 && RecvBuffer[5] == 0xC5)
+						{return 7;}
 						else
 						{	
 							#ifdef DEBUG
@@ -144,7 +151,9 @@ uint8_t RF_RecvHandler(void)
 ============================================================================*/
 void RF_SendPacket(uint8_t index)
 {
-	uint8_t i=0;	
+	uint8_t i=0;
+	uint32_t data;
+	uint32_t dataeeprom;// 从eeprom中读出的数
 		
 	if(index == 4)
 	{
@@ -202,6 +211,40 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
 		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[59] = RSSI;
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
+		{
+			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
+			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+//		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
+		}
+	}
+	else if(index == 7)
+	{
+		data = ((uint32_t)(0xFF000000 & RecvBuffer[10]<<24)+(uint32_t)(0x00FF0000 & RecvBuffer[11]<<16)+(uint32_t)(0x0000FF00 & RecvBuffer[12]<<8)+(uint32_t)(0x000000FF & RecvBuffer[13]));
+		DATAEEPROM_Program(EEPROM_START_ADDR, data);
+		data = ((uint32_t)(0xFF000000 & RecvBuffer[14]<<24)+(uint32_t)(0x00FF0000 & RecvBuffer[15]<<16)+(uint32_t)(0x0000FF00 & RecvBuffer[16]<<8)+(uint32_t)(0x000000FF & RecvBuffer[17]));
+		DATAEEPROM_Program(EEPROM_START_ADDR+4, data);
+		SendBuffer[0] = 0xAB;
+		SendBuffer[1] = 0xCD;
+		SendBuffer[2] = RecvBuffer[2];
+		SendBuffer[3] = RecvBuffer[3];		
+		SendBuffer[4] = 0xD5;
+		SendBuffer[5] = 0x01;
+		SendBuffer[6] = RecvBuffer[6];
+		SendBuffer[7] = RecvBuffer[7];
+		SendBuffer[8] = RecvBuffer[8];
+		SendBuffer[9] = RecvBuffer[9];
+		dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR);
+		SendBuffer[10] = (uint8_t)(0x000000FF & dataeeprom>>24);
+		SendBuffer[11] = (uint8_t)(0x000000FF & dataeeprom>>16);
+		SendBuffer[12] = (uint8_t)(0x000000FF & dataeeprom>>8);
+		SendBuffer[13] = (uint8_t)(0x000000FF & dataeeprom);
+		dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR+4);
+		SendBuffer[14] = (uint8_t)(0x000000FF & dataeeprom>>24);
+		SendBuffer[15] = (uint8_t)(0x000000FF & dataeeprom>>16);
+		SendBuffer[16] = (uint8_t)(0x000000FF & dataeeprom>>8);
+		SendBuffer[17] = (uint8_t)(0x000000FF & dataeeprom);	
 		SendBuffer[59] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
