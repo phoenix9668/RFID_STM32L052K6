@@ -108,7 +108,7 @@ void SPI_Config(void)
     SpiHandle.Init.CLKPolarity				= SPI_POLARITY_LOW;
     SpiHandle.Init.CLKPhase 				  = SPI_PHASE_1EDGE;
     SpiHandle.Init.NSS 								= SPI_NSS_SOFT;
-    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_32;//2MHz/32 = 0.0625MHz
+    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_32;//32MHz/32 = 1MHz
     SpiHandle.Init.FirstBit						= SPI_FIRSTBIT_MSB;
 		SpiHandle.Init.CRCCalculation    	= SPI_CRCCALCULATION_DISABLE;
     SpiHandle.Init.CRCPolynomial		  = 7;

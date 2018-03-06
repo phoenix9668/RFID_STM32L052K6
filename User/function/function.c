@@ -4,10 +4,11 @@
 /* Private typedef -----------------------------------------------------------*/
 /* UART handler declared in "bsp_debug_usart.c" file */
 extern UART_HandleTypeDef UartHandle;
+extern TIM_HandleTypeDef	TimHandle;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-uint8_t CollectCnt;      				// 接收MMA7361L次数
+uint8_t CollectCnt = 0;      				// 接收MMA7361L次数
 uint8_t	Chip_Addr	= 0;					// cc1101地址
 uint8_t	RSSI = 0;								// RSSI值
 uint8_t SendBuffer[SEND_LENGTH] = {0};// 发送数据包
@@ -94,11 +95,10 @@ uint8_t RF_RecvHandler(void)
 			#ifdef DEBUG
 			printf("interrupt occur\n");
 			#endif
-			while (CC1101_IRQ_READ() == 0);
+//			while (CC1101_IRQ_READ() == 0);
 			for (i=0; i<RECV_LENGTH; i++)   { RecvBuffer[i] = 0; } // clear array
+			length = CC1101RecPacket(RecvBuffer, &Chip_Addr, &RSSI);	// 读取接收到的数据长度和数据内容
 			
-			// 读取接收到的数据长度和数据内容
-			length = CC1101RecPacket(RecvBuffer, &Chip_Addr, &RSSI);
 			#ifdef DEBUG
 			rssi_dBm = CC1101CalcRSSI_dBm(RSSI);
 			printf("RSSI = %ddBm, length = %d, address = %d\n",rssi_dBm,length,Chip_Addr);
@@ -155,6 +155,12 @@ void RF_SendPacket(uint8_t index)
 	uint32_t data;
 	uint32_t dataeeprom;// 从eeprom中读出的数
 		
+	if(HAL_TIM_Base_Stop_IT(&TimHandle) != HAL_OK)
+  {
+    /* Stoping Error */
+    Error_Handler();
+  }
+	
 	if(index == 4)
 	{
 		SendBuffer[0] = 0xAB;
@@ -167,8 +173,17 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[7] = RecvBuffer[7];
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
-		SendBuffer[59] = RSSI;
+//		for(i=10; i<SEND_LENGTH; i++)
+//		{
+//			SendBuffer[i] = i-10;
+//		}
+//		printf("\r\n");
+//		for(i=0; i<SEND_LENGTH; i++)
+//		{
+//			printf("%x ",SendBuffer[i]);
+//		}
+		SendBuffer[244] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[245] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -189,8 +204,8 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[7] = RecvBuffer[7];
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
-		SendBuffer[59] = RSSI;
+		SendBuffer[244] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[245] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -210,8 +225,8 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[7] = RecvBuffer[7];
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[58] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
-		SendBuffer[59] = RSSI;
+		SendBuffer[244] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
+		SendBuffer[245] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -245,7 +260,11 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[15] = (uint8_t)(0x000000FF & dataeeprom>>16);
 		SendBuffer[16] = (uint8_t)(0x000000FF & dataeeprom>>8);
 		SendBuffer[17] = (uint8_t)(0x000000FF & dataeeprom);	
-		SendBuffer[59] = RSSI;
+		for(i=18; i<SEND_LENGTH-1; i++)
+		{
+			SendBuffer[i] = 0;
+		}
+		SendBuffer[245] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -308,8 +327,13 @@ void RF_SendPacket(uint8_t index)
 //		}
 //	}
 
-	for(i=0; i<SEND_LENGTH; i++) // clear array
+	for(i=0; i<10; i++) // clear array
 	{SendBuffer[i] = 0;}
+	if(HAL_TIM_Base_Start_IT(&TimHandle) != HAL_OK)
+  {
+    /* Starting Error */
+    Error_Handler();
+  }
 //	Usart_SendString(&UartHandle, (uint8_t *)"Transmit OK\r\n");
 	CC1101SetIdle();																	// 空闲模式，以转到sleep状态
 	CC1101WORInit();																	// 初始化电磁波激活功能
@@ -335,7 +359,7 @@ void MMA7361L_ReadHandler(void)
 	}
   MMA7361L_SL_ON();
 	CollectCnt++;
-//	printf("CollectCnt = %d\r\n", CollectCnt-1);
+	printf("CollectCnt = %d\r\n", CollectCnt-1);
 	if(CollectCnt == ACK_CNT)
 	{
 		CollectCnt = 0;
