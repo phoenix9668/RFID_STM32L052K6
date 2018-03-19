@@ -102,17 +102,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		{	RecvFlag=1;}
 	else
 		{	RecvFlag=0;}
-        
-	if(SendTime != 0)                           // 0.1s时间到，置位SendFlag标志，主函数查询发送数据  
-		{ 
-			if(--SendTime == 0)    
-				{	SendTime=SEND_GAP; 
-						SendFlag=1;
-						LED_GREEN_TOG();
-						MMA7361L_ReadHandler();
-				}
-		}
+
+	LED_GREEN_TOG();
+	MMA7361L_ReadHandler();
 }
+
+#ifdef UART_PROG
 /**
   * @brief  Tx Transfer completed callback
   * @param  UartHandle: UART handle. 
@@ -176,6 +171,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 			LED_GREEN_ON();
     }
 }
+#endif
 
 /**
   * @brief  System Clock Configuration

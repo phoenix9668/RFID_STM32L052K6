@@ -95,7 +95,7 @@ uint8_t RF_RecvHandler(void)
 			#ifdef DEBUG
 			printf("interrupt occur\n");
 			#endif
-//			while (CC1101_IRQ_READ() == 0);
+			while (CC1101_IRQ_READ() == 0);
 			for (i=0; i<RECV_LENGTH; i++)   { RecvBuffer[i] = 0; } // clear array
 			length = CC1101RecPacket(RecvBuffer, &Chip_Addr, &RSSI);	// 读取接收到的数据长度和数据内容
 			
@@ -359,7 +359,7 @@ void MMA7361L_ReadHandler(void)
 	}
   MMA7361L_SL_ON();
 	CollectCnt++;
-	printf("CollectCnt = %d\r\n", CollectCnt-1);
+//	printf("CollectCnt = %d\r\n", CollectCnt-1);
 	if(CollectCnt == ACK_CNT)
 	{
 		CollectCnt = 0;

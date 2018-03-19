@@ -35,7 +35,7 @@ void TIM_Config(void)
 	TimHandle.Instance = BASIC_TIM;
 	/* 累计 TIM_Period个后产生一个更新或者中断*/		
 	//当定时器从0计数到9999，即为10000次，为一个定时周期
-	TimHandle.Init.Period = 1000-1;
+	TimHandle.Init.Period = 10000-1;
 	
 	//定时器时钟源TIMxCLK = 2 * PCLK1
 	//				PCLK1 = HCLK / 4 

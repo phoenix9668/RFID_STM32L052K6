@@ -380,7 +380,7 @@ OUTPUT   : None
 void CC1101SendPacket(uint8_t *txbuffer, uint8_t size, TX_DATA_MODE mode)
 {
     uint8_t address;
-    volatile uint8_t i,k,j;
+    uint8_t i,k,j;
 	
 		k = size/60;
 		j = size%60;
@@ -483,39 +483,26 @@ uint8_t CC1101RecPacket(uint8_t *rxBuffer, uint8_t *addr, uint8_t *rssi)
 {
     uint8_t status[2];
     uint8_t pktLen;
-		uint8_t i,k,j;
 
-		while(CC1101GetRXCnt() == 0);
-		pktLen=CC1101ReadReg(CC1101_RXFIFO);                    // Read length byte
-		if((CC1101ReadReg(CC1101_PKTCTRL1) & ~0x03) != 0)
+		if(CC1101GetRXCnt() != 0)
 		{
-			*addr = CC1101ReadReg(CC1101_RXFIFO);
+			pktLen=CC1101ReadReg(CC1101_RXFIFO);                    // Read length byte
+			if((CC1101ReadReg(CC1101_PKTCTRL1) & ~0x03) != 0)
+			{
+				*addr = CC1101ReadReg(CC1101_RXFIFO);
+			}
+			if(pktLen == 0) {return 0;}
+			else    {pktLen--;}
+			CC1101ReadMultiReg(CC1101_RXFIFO, rxBuffer, pktLen);    // Pull data
+			CC1101ReadMultiReg(CC1101_RXFIFO, status, 2);           // Read status bytes
+			*rssi = status[0];
+
+			CC1101ClrRXBuff();
+
+			if(status[1] & CRC_OK)  {return pktLen;}
+			else    {return 1;}
 		}
-		if(pktLen == 0) {return 0;}
-		else    {pktLen--;}
-
-		k = pktLen/60;
-		j = pktLen%60;
-
-		for(i=0; i<k; i++)
-		{
-			while(CC1101_GDO2_READ() != 0);//等待rx fifo中断上升沿
-			while(CC1101_GDO2_READ() == 0);
-			CC1101ReadMultiReg(CC1101_RXFIFO, (rxBuffer+60*i), 60);    // Pull data
-		}
-			if(j != 0)
-		{
-			while(CC1101_IRQ_READ() != 0);//等待接收完毕中断上升沿
-			while(CC1101_IRQ_READ() == 0);
-			CC1101ReadMultiReg(CC1101_RXFIFO, (rxBuffer+60*k), j);    // Pull data
-		}
-		CC1101ReadMultiReg(CC1101_RXFIFO, status, 2);           // Read status bytes
-		*rssi = status[0];
-
-		CC1101ClrRXBuff();
-
-		if(status[1] & CRC_OK)  {return pktLen;}
-		else    {return 0;}
+		else	{return 0;}
 }
 /*
 ================================================================================
