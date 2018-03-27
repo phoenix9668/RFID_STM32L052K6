@@ -15,8 +15,7 @@
 
 //10, 7, 5, 0, -5, -10, -15, -20, dbm output power, 0x12 == -30dbm
 uint8_t PaTabel[]={0xc0, 0xC8, 0x84, 0x60, 0x68, 0x34, 0x1D, 0x0E};
-
-uint8_t temp1;//for debug
+__IO uint8_t cnt_i = 0,cnt_k = 0,cnt_j = 0;
 
 // Sync word qualifier mode = 30/32 sync word bits detected 
 // CRC autoflush = false 
@@ -88,7 +87,7 @@ uint8_t temp1;//for debug
 // Deviation = 31.738281
 // Packet length mode = Variable packet length mode. Packet length configured by the first byte after sync word 
 // Packet length = 255 
-// Modulation format = 2-FSK
+// Modulation format = GFSK
 // Base frequency = 432.999817
 // Modulated = true 
 // Channel number = 0 
@@ -109,7 +108,7 @@ static const uint8_t CC1101InitData[30][2]=
   {CC1101_FREQ0,       0x62},
   {CC1101_MDMCFG4,     0x7B},
   {CC1101_MDMCFG3,     0x83},
-  {CC1101_MDMCFG2,     0x8B},
+  {CC1101_MDMCFG2,     0x9B},
   {CC1101_DEVIATN,     0x42},
 	{CC1101_MCSM1,       0x30},
   {CC1101_MCSM0,       0x18},

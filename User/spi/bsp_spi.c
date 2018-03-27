@@ -44,16 +44,16 @@ void GPIO_Config(void)
     GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
     HAL_GPIO_Init(CC1101_IRQ_GPIO_PORT, &GPIO_InitStructure);
     
-    //配置GDO2的GPIO引脚
-    GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
-    HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
-    
-//    /* 配置 EXTI 中断源 到key1 引脚*/
-//    HAL_NVIC_SetPriority(CC1101_GDO2_EXTI_IRQ, 0, 0);
-//    /* 配置中断优先级 */
-//    HAL_NVIC_SetPriority(CC1101_GDO2_EXTI_IRQ, 0, 0);
-//    /* 使能中断 */
-//    HAL_NVIC_EnableIRQ(CC1101_GDO2_EXTI_IRQ);
+		/* Configure GDO2 pin as input floating */
+//		GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
+//		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
+//		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+		HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
+
+		/* Enable and set EXTI4_15 Interrupt to the lowest priority */
+//		HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
+//		HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 }
 
 /**
@@ -108,7 +108,7 @@ void SPI_Config(void)
     SpiHandle.Init.CLKPolarity				= SPI_POLARITY_LOW;
     SpiHandle.Init.CLKPhase 				  = SPI_PHASE_1EDGE;
     SpiHandle.Init.NSS 								= SPI_NSS_SOFT;
-    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_32;//32MHz/32 = 1MHz
+    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_8;//2mHz/8 = 250kHz
     SpiHandle.Init.FirstBit						= SPI_FIRSTBIT_MSB;
 		SpiHandle.Init.CRCCalculation    	= SPI_CRCCALCULATION_DISABLE;
     SpiHandle.Init.CRCPolynomial		  = 7;

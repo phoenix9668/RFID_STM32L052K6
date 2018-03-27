@@ -37,8 +37,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_it.h"
-#include "./tim/bsp_basic_tim.h"
-#include "./usart/bsp_debug_usart.h"
+#include "./function/function.h"
 
 /** @addtogroup STM32L0xx_HAL_Examples
   * @{
@@ -165,6 +164,17 @@ void DEBUG_USART_IRQHandler(void)
 //	}
   HAL_UART_IRQHandler(&UartHandle);
 }
+
+/**
+  * @brief  This function handles External lines 0 to 1 interrupt request.
+  * @param  None
+  * @retval None
+  */
+//void EXTI4_15_IRQHandler(void)
+//{
+//  HAL_GPIO_EXTI_IRQHandler(CC1101_GDO2_PIN);
+//	printf("burst\n");
+//}
 
 /**
   * @brief  This function handles PPP interrupt request.
