@@ -3,7 +3,7 @@
 
 #include "stm32l0xx.h"
 #include <stdio.h>
-#define DEBUG
+//#define DEBUG
 //#define UART_PROG
 extern void Error_Handler(void);
 extern UART_HandleTypeDef UartHandle;
@@ -12,7 +12,7 @@ extern UART_HandleTypeDef UartHandle;
 /*******************************************************/
 #define DEBUG_USART                             USART2
 #define DEBUG_USART_CLK_ENABLE()       	        __USART2_CLK_ENABLE();
-#define DEBUG_USART_BAUDRATE                    9600
+#define DEBUG_USART_BAUDRATE                    2400
 
 #define DEBUG_USART_FORCE_RESET()            		__HAL_RCC_USART2_FORCE_RESET()
 #define DEBUG_USART_RELEASE_RESET()           	__HAL_RCC_USART2_RELEASE_RESET()

@@ -47,18 +47,18 @@ you must offer the following functions for this module
 2. CC1101_CSN_LOW();                        // Pull down the CSN line
 3. CC1101_CSN_HIGH();                       // Pull up the CSN Line
 ===========================================================================*/
-// CC1101相关控制引脚定义， CSN(PA15), IRQ(PB7), GDO2(PB6)
+// CC1101相关控制引脚定义， CSN(PA15), IRQ(PB6), GDO2(PA12)
 #define CC1101_SPI_CSN_PIN              GPIO_PIN_15                	/* PA.15 */
 #define CC1101_SPI_CSN_GPIO_PORT        GPIOA                       /* GPIOA */
 #define CC1101_SPI_CSN_GPIO_CLK_ENABLE()		__HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define CC1101_IRQ_PIN                  GPIO_PIN_7                  /* PB.07 */
+#define CC1101_IRQ_PIN                  GPIO_PIN_6                  /* PB.06 */
 #define CC1101_IRQ_GPIO_PORT            GPIOB                       /* GPIOB */
 #define CC1101_IRQ_GPIO_CLK_ENABLE() 		__HAL_RCC_GPIOB_CLK_ENABLE()
 
-#define CC1101_GDO2_PIN                 GPIO_PIN_6                  /* PB.06 */
-#define CC1101_GDO2_GPIO_PORT           GPIOB                       /* GPIOB */
-#define CC1101_GDO2_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOB_CLK_ENABLE()
+#define CC1101_GDO2_PIN                 GPIO_PIN_12                	/* PA.12 */
+#define CC1101_GDO2_GPIO_PORT           GPIOA                       /* GPIOA */
+#define CC1101_GDO2_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOA_CLK_ENABLE()
 
 #define CC1101_CSN_LOW()                HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET)
 
@@ -68,12 +68,37 @@ you must offer the following functions for this module
 
 #define CC1101_GDO2_READ()             	HAL_GPIO_ReadPin(CC1101_GDO2_GPIO_PORT, CC1101_GDO2_PIN)
 
+/*===========================================================================
+4. ADXL362_CSN_LOW();                 			// Pull down the CSN line
+5. ADXL362_CSN_HIGH();                			// Pull up the CSN Line
+===========================================================================*/
+// ADXL362相关控制引脚定义， CSN(PA5), INT1(PA7), INT2(PA6)
+#define ADXL362_SPI_CSN_PIN         		GPIO_PIN_5                	/* PA.5 */
+#define ADXL362_SPI_CSN_GPIO_PORT    		GPIOA                       /* GPIOA */
+#define ADXL362_SPI_CSN_GPIO_CLK_ENABLE()		__HAL_RCC_GPIOA_CLK_ENABLE()
+
+#define ADXL362_INT1_PIN              	GPIO_PIN_7                  /* PA.07 */
+#define ADXL362_INT1_GPIO_PORT        	GPIOA                     	/* GPIOA */
+#define ADXL362_INT1_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOA_CLK_ENABLE()
+
+#define ADXL362_INT2_PIN              	GPIO_PIN_6                	/* PA.06 */
+#define ADXL362_INT2_GPIO_PORT         	GPIOA                       /* GPIOA */
+#define ADXL362_INT2_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOA_CLK_ENABLE()
+
+#define ADXL362_CSN_LOW()             	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_RESET)
+
+#define ADXL362_CSN_HIGH()             	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET)
+
+#define ADXL362_INT1_READ()          		HAL_GPIO_ReadPin(ADXL362_INT1_GPIO_PORT, ADXL362_INT1_PIN)
+
+#define ADXL362_INT2_READ()           	HAL_GPIO_ReadPin(ADXL362_INT2_GPIO_PORT, ADXL362_INT2_PIN)
+
 /**
   * @brief  LED Interface pins
   */
-#define LED_GREEN_PIN        						GPIO_PIN_12
-#define	LED_GPIO_PORT      	 						GPIOA
-#define	LED_GPIO_CLK_ENABLE()        		__HAL_RCC_GPIOA_CLK_ENABLE()
+#define LED_GREEN_PIN        						GPIO_PIN_7
+#define	LED_GPIO_PORT      	 						GPIOB
+#define	LED_GPIO_CLK_ENABLE()        		__HAL_RCC_GPIOB_CLK_ENABLE()
 
 /* 直接操作寄存器的方法控制IO */
 #define	digitalHi(p,i)									{p->BSRR=i;}			  						//设置为高电平
@@ -85,10 +110,20 @@ you must offer the following functions for this module
 #define LED_GREEN_ON()       						HAL_GPIO_WritePin(LED_GPIO_PORT, LED_GREEN_PIN, GPIO_PIN_SET)
 #define LED_GREEN_TOG()      						digitalToggle(LED_GPIO_PORT,LED_GREEN_PIN)
 
+/**
+  * @brief  ADC_IN1 Interface pins
+  */
+#define ADC_IN1_PIN        							GPIO_PIN_1
+#define	ADC_IN1_PORT      	 						GPIOA
+#define	ADC_IN1_CLK_ENABLE()        		__HAL_RCC_GPIOA_CLK_ENABLE()
+#define ADC_IN1_READ()               		HAL_GPIO_ReadPin(ADC_IN1_PORT, ADC_IN1_PIN)
+
 void GPIO_Config(void);                // 初始化通用IO端口
+void INT_GPIO_Config(void);
 void SPI_Config(void);                 // 初始化SPI
 
-uint8_t SPI_ExchangeByte(uint8_t input);  // 通过SPI进行数据交换
+uint8_t SPI_ExchangeByte(uint8_t input);
+void SpiFunction(unsigned char OutputBuff[],unsigned char InputBuff[], unsigned int OutNoOfBytes, unsigned int InNoOfBytes);
 void SPI_SendData(SPI_HandleTypeDef *hspi, uint16_t Data);
 uint16_t SPI_ReceiveData(SPI_HandleTypeDef *hspi);
 FlagStatus SPI_GetFlagStatus(SPI_HandleTypeDef *hspi, uint16_t SPI_FLAG);

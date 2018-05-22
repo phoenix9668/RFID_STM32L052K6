@@ -97,19 +97,19 @@ void HAL_MspDeInit(void)
   * @param htim: TIM handle pointer
   * @retval None
   */
-void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
-{
-  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-  /* TIMx Peripheral clock enable */
-  BASIC_TIM_CLK_ENABLE();
-  
-  /*##-2- Configure the NVIC for TIMx ########################################*/
-  /* Set Interrupt Group Priority */ 
-  HAL_NVIC_SetPriority(BASIC_TIM_IRQn, 0, 0);
-  
-  /* Enable the TIMx global Interrupt */
-  HAL_NVIC_EnableIRQ(BASIC_TIM_IRQn);
-}
+//void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
+//{
+//  /*##-1- Enable peripherals and GPIO Clocks #################################*/
+//  /* TIMx Peripheral clock enable */
+//  BASIC_TIM_CLK_ENABLE();
+//  
+//  /*##-2- Configure the NVIC for TIMx ########################################*/
+//  /* Set Interrupt Group Priority */ 
+//  HAL_NVIC_SetPriority(BASIC_TIM_IRQn, 0, 0);
+//  
+//  /* Enable the TIMx global Interrupt */
+//  HAL_NVIC_EnableIRQ(BASIC_TIM_IRQn);
+//}
 
 /**
   * @brief UART MSP De-Initialization 

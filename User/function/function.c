@@ -5,12 +5,15 @@
 /* UART handler declared in "bsp_debug_usart.c" file */
 extern UART_HandleTypeDef UartHandle;
 extern TIM_HandleTypeDef	TimHandle;
+extern uint32_t step;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-uint8_t CollectCnt = 0;      				// 接收MMA7361L次数
 uint8_t	Chip_Addr	= 0;					// cc1101地址
 uint8_t	RSSI = 0;								// RSSI值
+uint8_t addr_eeprom;
+uint16_t sync_eeprom;
+uint32_t rfid_eeprom;
 uint8_t SendBuffer[SEND_LENGTH] = {0};// 发送数据包
 uint8_t RecvBuffer[RECV_LENGTH] = {0};// 接收数据包
 float ADC_ConvertedValueLocal[MMA7361L_NOFCHANEL];// 用于保存转化计算后的电压值
@@ -26,10 +29,15 @@ extern void Delay(__IO uint32_t nCount);
 void MCU_Initial(void)
 { 
     GPIO_Config();
-		Debug_USART_Config();
-    TIM_Config();
-    SPI_Config();
-		MMA7361L_Config();
+//		if(ADC_IN1_READ() == 1)
+		#ifdef DEBUG
+			Debug_USART_Config();
+		#endif
+		SPI_Config();
+		Delay(0xFFF);
+		ADXL362_Init();
+		INT_GPIO_Config();
+//    TIM_Config();
 }
 
 /*===========================================================================
@@ -56,19 +64,17 @@ void RF_Initial(uint8_t addr, uint16_t sync, uint8_t mode)
 ============================================================================*/
 void System_Initial(void)
 {
-		uint8_t addr_eeprom;
-		uint16_t sync_eeprom;
-		uint32_t rfid_eeprom;
 		/*##-1- initial all peripheral ###########################*/
     MCU_Initial(); 
 		/*##-2- initial CC1101 peripheral,configure it's address and sync code ###########################*/
 		addr_eeprom = (uint8_t)(0xff & DATAEEPROM_Read(EEPROM_START_ADDR)>>16); 
 		sync_eeprom = (uint16_t)(0xffff & DATAEEPROM_Read(EEPROM_START_ADDR)); 
 		rfid_eeprom	= DATAEEPROM_Read(EEPROM_START_ADDR+4);
+//		if(ADC_IN1_READ() == 1)
 		#ifdef DEBUG
-		printf("addr_eeprom = %x\n",addr_eeprom);
-		printf("sync_eeprom = %x\n",sync_eeprom);
-		printf("rfid_eeprom = %x\n",rfid_eeprom);
+			printf("addr_eeprom = %x\n",addr_eeprom);
+			printf("sync_eeprom = %x\n",sync_eeprom);
+			printf("rfid_eeprom = %x\n",rfid_eeprom);
 		#endif
     RF_Initial(addr_eeprom, sync_eeprom, IDLE);     // 初始化无线芯片，空闲模式
 		#ifdef UART_PROG
@@ -86,32 +92,38 @@ void System_Initial(void)
 uint8_t RF_RecvHandler(void)
 {
 	uint8_t i=0, length=0;
-	#ifdef DEBUG
 	int16_t rssi_dBm;
-	#endif
+	uint32_t timeout;
 	
 	if(CC1101_IRQ_READ() == 0)         // 检测无线模块是否产生接收中断 
 		{			
-			#ifdef DEBUG
-			printf("interrupt occur\n");
-			#endif
-			while (CC1101_IRQ_READ() == 0);
+//			if(ADC_IN1_READ() == 1)
+				#ifdef DEBUG
+				printf("interrupt occur\n");
+				#endif
+			timeout = Delay_TimeOut;
+			while (CC1101_IRQ_READ() == 0 && timeout != 0)
+			{
+				timeout--;
+			}
 			for (i=0; i<RECV_LENGTH; i++)   { RecvBuffer[i] = 0; } // clear array
 			length = CC1101RecPacket(RecvBuffer, &Chip_Addr, &RSSI);	// 读取接收到的数据长度和数据内容
 			
-			#ifdef DEBUG
-			rssi_dBm = CC1101CalcRSSI_dBm(RSSI);
-			printf("RSSI = %ddBm, length = %d, address = %d\n",rssi_dBm,length,Chip_Addr);
-			for(i=0; i<RECV_LENGTH; i++)
-			{	
-				printf("%x ",RecvBuffer[i]);
-			}
-			#endif
+//			if(ADC_IN1_READ() == 1)
+				#ifdef DEBUG
+				rssi_dBm = CC1101CalcRSSI_dBm(RSSI);
+				printf("RSSI = %ddBm, length = %d, address = %d\n",rssi_dBm,length,Chip_Addr);
+				for(i=0; i<RECV_LENGTH; i++)
+				{	
+					printf("%x ",RecvBuffer[i]);
+				}
+				#endif
 			if(length == 0)
 				{
-					#ifdef DEBUG
-					printf("receive error or Address Filtering fail\n");
-					#endif
+//					if(ADC_IN1_READ() == 1)
+						#ifdef DEBUG
+						printf("receive error or Address Filtering fail\n");
+						#endif
 					return 1;
 				}
 			else
@@ -126,17 +138,21 @@ uint8_t RF_RecvHandler(void)
 						{return 6;}
 						else if(RecvBuffer[4] == 0xC5 && RecvBuffer[5] == 0xC5)
 						{return 7;}
+						else if(RecvBuffer[4] == 0xC6 && RecvBuffer[5] == 0xC6)
+						{return 8;}
 						else
 						{	
+//							if(ADC_IN1_READ() == 1)
 							#ifdef DEBUG
-							printf("receive function order error\r\n");
+								printf("receive function order error\r\n");
 							#endif
 							return 3;}
 					}
 					else
 					{	
+//						if(ADC_IN1_READ() == 1)
 						#ifdef DEBUG
-						printf("receive package beginning error\r\n");
+							printf("receive package beginning error\r\n");
 						#endif
 						return 2;}
 				}
@@ -155,11 +171,14 @@ void RF_SendPacket(uint8_t index)
 	uint32_t data;
 	uint32_t dataeeprom;// 从eeprom中读出的数
 		
-	if(HAL_TIM_Base_Stop_IT(&TimHandle) != HAL_OK)
-  {
-    /* Stoping Error */
-    Error_Handler();
-  }
+//	if(HAL_TIM_Base_Stop_IT(&TimHandle) != HAL_OK)
+//  {
+//    /* Stoping Error */
+//    Error_Handler();
+//  }
+	
+	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
+	LED_GREEN_OFF();
 	
 	if(index == 4)
 	{
@@ -173,6 +192,10 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[7] = RecvBuffer[7];
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
+		SendBuffer[10] = (uint8_t)(0x000000FF & step>>24);
+		SendBuffer[11] = (uint8_t)(0x000000FF & step>>16);
+		SendBuffer[12] = (uint8_t)(0x000000FF & step>>8);
+		SendBuffer[13] = (uint8_t)(0x000000FF & step);
 //		for(i=10; i<SEND_LENGTH; i++)
 //		{
 //			SendBuffer[i] = i-10;
@@ -182,14 +205,12 @@ void RF_SendPacket(uint8_t index)
 //		{
 //			printf("%x ",SendBuffer[i]);
 //		}
-		SendBuffer[244] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
-		SendBuffer[245] = RSSI;
+		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFF);
+			Delay(0xFFFF);
 		}
-//		printf("send over\r\n");
 	}
 	else if(index == 5)
 	{
@@ -203,8 +224,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[7] = RecvBuffer[7];
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[244] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
-		SendBuffer[245] = RSSI;
+		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -224,8 +244,11 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[7] = RecvBuffer[7];
 		SendBuffer[8] = RecvBuffer[8];
 		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[244] = CollectCnt-1; // 返回当前电压值数据包的最新数据的编号
-		SendBuffer[245] = RSSI;
+		SendBuffer[10] = (uint8_t)(0x000000FF & step>>24);
+		SendBuffer[11] = (uint8_t)(0x000000FF & step>>16);
+		SendBuffer[12] = (uint8_t)(0x000000FF & step>>8);
+		SendBuffer[13] = (uint8_t)(0x000000FF & step);
+		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
@@ -259,18 +282,35 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[15] = (uint8_t)(0x000000FF & dataeeprom>>16);
 		SendBuffer[16] = (uint8_t)(0x000000FF & dataeeprom>>8);
 		SendBuffer[17] = (uint8_t)(0x000000FF & dataeeprom);	
-		for(i=18; i<SEND_LENGTH-1; i++)
-		{
-			SendBuffer[i] = 0;
-		}
-		SendBuffer[245] = RSSI;
+		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
 			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
-	}	
+	}
+	else if(index == 8)
+	{
+		step = 0;
+		SendBuffer[0] = 0xAB;
+		SendBuffer[1] = 0xCD;
+		SendBuffer[2] = RecvBuffer[2];
+		SendBuffer[3] = RecvBuffer[3];		
+		SendBuffer[4] = 0xD6;
+		SendBuffer[5] = 0x01;
+		SendBuffer[6] = RecvBuffer[6];
+		SendBuffer[7] = RecvBuffer[7];
+		SendBuffer[8] = RecvBuffer[8];
+		SendBuffer[9] = RecvBuffer[9];
+		SendBuffer[18] = RSSI;
+		for(i=0; i<SEND_PACKAGE_NUM; i++)
+		{
+			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
+			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+//		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
+		}
+	}
 //	else if(index == 1)
 //	{
 //		SendBuffer[0] = 0xAB;
@@ -326,112 +366,18 @@ void RF_SendPacket(uint8_t index)
 //		}
 //	}
 
-	for(i=0; i<10; i++) // clear array
+	for(i=0; i<SEND_LENGTH; i++) // clear array
 	{SendBuffer[i] = 0;}
-	if(HAL_TIM_Base_Start_IT(&TimHandle) != HAL_OK)
-  {
-    /* Starting Error */
-    Error_Handler();
-  }
+//	if(HAL_TIM_Base_Start_IT(&TimHandle) != HAL_OK)
+//  {
+//    /* Starting Error */
+//    Error_Handler();
+//  }
+	
 //	Usart_SendString(&UartHandle, (uint8_t *)"Transmit OK\r\n");
-	CC1101SetIdle();																	// 空闲模式，以转到sleep状态
-	CC1101WORInit();																	// 初始化电磁波激活功能
-	CC1101SetWORMode();
-}
-
-/*===========================================================================
-* 函数 :MMA7361L_ReadHandler() => 读MMA731L中断函数                         	* 
-============================================================================*/
-void MMA7361L_ReadHandler(void)
-{
-	MMA7361L_GS_1G5();
-	MMA7361L_SL_OFF();
-	Delay(0x3FFF);
-	if(CollectCnt < ACK_CNT)
-	{
-		SendBuffer[CollectCnt*6 + 10] = (uint8_t)(0xFF & ADC_ConvertedValue[0]);
-		SendBuffer[CollectCnt*6 + 11] = (uint8_t)((0x0F & (ADC_ConvertedValue[0]>>8)) + (0xF0 & ((uint8_t)CollectCnt<<4)));
-		SendBuffer[CollectCnt*6 + 12] = (uint8_t)(0xFF & ADC_ConvertedValue[1]);
-		SendBuffer[CollectCnt*6 + 13] = (uint8_t)(0xFF & (ADC_ConvertedValue[1]>>8));
-		SendBuffer[CollectCnt*6 + 14] = (uint8_t)(0xFF & ADC_ConvertedValue[2]);
-		SendBuffer[CollectCnt*6 + 15] = (uint8_t)(0xFF & (ADC_ConvertedValue[2]>>8));
-	}
-  MMA7361L_SL_ON();
-	CollectCnt++;
-//	printf("CollectCnt = %d\r\n", CollectCnt-1);
-	if(CollectCnt == ACK_CNT)
-	{
-		CollectCnt = 0;
-	}
-}
-
-/*===========================================================================
-* 函数 :MMA7361L_display() => 打印MMA7361L的数据                         			* 
-============================================================================*/
-void MMA7361L_display(void)
-{
-	uint8_t temp;
-	Delay(0xffffee);
-	if(temp < 10)
-	{
-		MMA7361L_GS_1G5();
-		MMA7361L_SL_OFF();
-		Delay(0xFF);
-		ADC_ConvertedValueLocal[0] =(float)((uint16_t)ADC_ConvertedValue[0]*3.3/4096); 
-		ADC_ConvertedValueLocal[1] =(float)((uint16_t)ADC_ConvertedValue[1]*3.3/4096);
-		ADC_ConvertedValueLocal[2] =(float)((uint16_t)ADC_ConvertedValue[2]*3.3/4096);  
-		#ifdef DEBUG
-		printf("The current AD1 value = 0x%08X \r\n", ADC_ConvertedValue[0]); 
-		printf("The current AD2 value = 0x%08X \r\n", ADC_ConvertedValue[1]);
-		printf("The current AD3 value = 0x%08X \r\n", ADC_ConvertedValue[2]);   
-    
-		printf("The current ADC1 value = %f V \r\n", ADC_ConvertedValueLocal[0]); 
-		printf("The current ADC2 value = %f V \r\n", ADC_ConvertedValueLocal[1]);
-		printf("The current ADC2 value = %f V \r\n", ADC_ConvertedValueLocal[2]);
-		#endif
-		temp++;
-	}
-	else if(temp < 20)
-	{
-		MMA7361L_GS_6G();
-		MMA7361L_SL_OFF();
-		Delay(0xFF);
-		ADC_ConvertedValueLocal[0] =(float)((uint16_t)ADC_ConvertedValue[0]*3.3/4096); 
-		ADC_ConvertedValueLocal[1] =(float)((uint16_t)ADC_ConvertedValue[1]*3.3/4096);
-		ADC_ConvertedValueLocal[2] =(float)((uint16_t)ADC_ConvertedValue[2]*3.3/4096);  
-    #ifdef DEBUG
-		printf("The current AD1 value = 0x%08X \r\n", ADC_ConvertedValue[0]); 
-		printf("The current AD2 value = 0x%08X \r\n", ADC_ConvertedValue[1]);
-		printf("The current AD3 value = 0x%08X \r\n", ADC_ConvertedValue[2]);   
-    
-		printf("The current ADC1 value = %f V \r\n", ADC_ConvertedValueLocal[0]); 
-		printf("The current ADC2 value = %f V \r\n", ADC_ConvertedValueLocal[1]);
-		printf("The current ADC2 value = %f V \r\n", ADC_ConvertedValueLocal[2]);
-		#endif
-		temp++;
-	}
-	else if(temp < 30)
-	{
-		MMA7361L_SL_ON();
-		Delay(0xFF);
-		ADC_ConvertedValueLocal[0] =(float)((uint16_t)ADC_ConvertedValue[0]*3.3/4096); 
-		ADC_ConvertedValueLocal[1] =(float)((uint16_t)ADC_ConvertedValue[1]*3.3/4096);
-		ADC_ConvertedValueLocal[2] =(float)((uint16_t)ADC_ConvertedValue[2]*3.3/4096);  
-    #ifdef DEBUG
-		printf("The current AD1 value = 0x%08X \r\n", ADC_ConvertedValue[0]); 
-		printf("The current AD2 value = 0x%08X \r\n", ADC_ConvertedValue[1]);
-		printf("The current AD3 value = 0x%08X \r\n", ADC_ConvertedValue[2]);   
-    
-		printf("The current ADC1 value = %f V \r\n", ADC_ConvertedValueLocal[0]); 
-		printf("The current ADC2 value = %f V \r\n", ADC_ConvertedValueLocal[1]);
-		printf("The current ADC2 value = %f V \r\n", ADC_ConvertedValueLocal[2]);
-		#endif
-		temp++;
-	}
-	else
-	{
-		temp = 0;
-	}
+	RF_Initial(addr_eeprom, sync_eeprom, IDLE);
+	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+	LED_GREEN_ON();
 }
 
 /*===========================================================================

@@ -143,11 +143,12 @@ void SysTick_Handler(void)
   * @param  None
   * @retval None
   */
-void BASIC_TIM_IRQHandler(void)
-{
-  HAL_TIM_IRQHandler(&TimHandle);
-}
+//void BASIC_TIM_IRQHandler(void)
+//{
+//  HAL_TIM_IRQHandler(&TimHandle);
+//}
 
+#ifdef UART_PROG
 /**
   * @brief  This function handles UART interrupt request.  
   * @param  None
@@ -164,17 +165,18 @@ void DEBUG_USART_IRQHandler(void)
 //	}
   HAL_UART_IRQHandler(&UartHandle);
 }
+#endif
 
 /**
   * @brief  This function handles External lines 0 to 1 interrupt request.
   * @param  None
   * @retval None
   */
-//void EXTI4_15_IRQHandler(void)
-//{
-//  HAL_GPIO_EXTI_IRQHandler(CC1101_GDO2_PIN);
+void EXTI4_15_IRQHandler(void)
+{
+  HAL_GPIO_EXTI_IRQHandler(ADXL362_INT1_PIN);
 //	printf("burst\n");
-//}
+}
 
 /**
   * @brief  This function handles PPP interrupt request.

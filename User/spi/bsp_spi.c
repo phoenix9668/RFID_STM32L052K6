@@ -24,36 +24,74 @@ SPI_HandleTypeDef SpiHandle;
 void GPIO_Config(void)
 {
     GPIO_InitTypeDef GPIO_InitStructure;
-	
+
     //开启GPIO外设时钟
     LED_GPIO_CLK_ENABLE();
+		ADC_IN1_CLK_ENABLE();
     CC1101_IRQ_GPIO_CLK_ENABLE();
-    CC1101_GDO2_GPIO_CLK_ENABLE();
+//    CC1101_GDO2_GPIO_CLK_ENABLE();
+		ADXL362_INT1_GPIO_CLK_ENABLE();
+		ADXL362_INT2_GPIO_CLK_ENABLE();
 	
     //配置LED的GPIO引脚
     GPIO_InitStructure.Pin = LED_GREEN_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStructure.Pull  = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
-    
+
+		LED_GREEN_ON();
+
+		//配置ADC_IN1的GPIO引脚
+    GPIO_InitStructure.Pin = ADC_IN1_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(ADC_IN1_PORT, &GPIO_InitStructure);
+
+
+}
+
+/**
+  * @brief  INT_GPIO_Config function
+  * @param  None
+  * @retval None
+  */
+void INT_GPIO_Config(void)
+{
+		GPIO_InitTypeDef GPIO_InitStructure;
+	
     //配置IRQ的GPIO引脚
     GPIO_InitStructure.Pin = CC1101_IRQ_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_NOPULL;
-    GPIO_InitStructure.Speed = GPIO_SPEED_HIGH;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(CC1101_IRQ_GPIO_PORT, &GPIO_InitStructure);
-    
+
 		/* Configure GDO2 pin as input floating */
 //		GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
 //		GPIO_InitStructure.Pull = GPIO_NOPULL;
-		GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
+//		GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
 //		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-		HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
+//		HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
+		
+		/* Configure INT2 pin as input floating */
+		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Pin = ADXL362_INT2_PIN;
+//		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+		HAL_GPIO_Init(ADXL362_INT2_GPIO_PORT, &GPIO_InitStructure);
+
+		/* Configure INT1 pin as input floating */
+		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Pin = ADXL362_INT1_PIN;
+//		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+		HAL_GPIO_Init(ADXL362_INT1_GPIO_PORT, &GPIO_InitStructure);
 
 		/* Enable and set EXTI4_15 Interrupt to the lowest priority */
-//		HAL_NVIC_SetPriority(EXTI4_15_IRQn, 3, 0);
-//		HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+		HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 1);
+		HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 }
 
 /**
@@ -70,17 +108,34 @@ void SPI_Config(void)
 		CC1101_SPI_MISO_GPIO_CLK_ENABLE();
 		CC1101_SPI_MOSI_GPIO_CLK_ENABLE();
 		CC1101_SPI_CSN_GPIO_CLK_ENABLE();
+		ADXL362_SPI_CSN_GPIO_CLK_ENABLE();
 
+    /* Set SPI_CSN Pin */
+    GPIO_InitStructure.Pin = CC1101_SPI_CSN_PIN;
+    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(CC1101_SPI_CSN_GPIO_PORT, &GPIO_InitStructure);
+		
+		/* Set SPI_CSN2 Pin */
+    GPIO_InitStructure.Pin = ADXL362_SPI_CSN_PIN;
+    HAL_GPIO_Init(ADXL362_SPI_CSN_GPIO_PORT, &GPIO_InitStructure);
+    
+    /* Set SPI_CSN Pin High */
+    CC1101_CSN_HIGH();
+		ADXL362_CSN_HIGH();	
+	
     /* Set SPI_SCK Pin */
     GPIO_InitStructure.Pin = CC1101_SPI_SCK_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    GPIO_InitStructure.Speed = GPIO_SPEED_FAST;
+    GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+    GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 		GPIO_InitStructure.Alternate = CC1101_SPI_SCK_AF;
     HAL_GPIO_Init(CC1101_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
     
     /* Set SPI_MISO Pin */
     GPIO_InitStructure.Pin = CC1101_SPI_MISO_PIN;
+		GPIO_InitStructure.Pull = GPIO_PULLUP;
 		GPIO_InitStructure.Alternate = CC1101_SPI_MISO_AF;
     HAL_GPIO_Init(CC1101_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
     
@@ -89,17 +144,8 @@ void SPI_Config(void)
 		GPIO_InitStructure.Alternate = CC1101_SPI_MOSI_AF;
     HAL_GPIO_Init(CC1101_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
     
-    /* Set SPI_CSN Pin */
-    GPIO_InitStructure.Pin = CC1101_SPI_CSN_PIN;
-    GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
-    HAL_GPIO_Init(CC1101_SPI_CSN_GPIO_PORT, &GPIO_InitStructure);
-    
 		/* Enable the SPI periph */
     CC1101_SPI_CLK_ENABLE();
-		
-    /* Set SPI_CSN Pin High */
-    CC1101_CSN_HIGH();
     
     /* SPI configuration -------------------------------------------------------*/
     SpiHandle.Instance								= CC1101_SPI;
@@ -108,7 +154,7 @@ void SPI_Config(void)
     SpiHandle.Init.CLKPolarity				= SPI_POLARITY_LOW;
     SpiHandle.Init.CLKPhase 				  = SPI_PHASE_1EDGE;
     SpiHandle.Init.NSS 								= SPI_NSS_SOFT;
-    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_8;//2mHz/8 = 250kHz
+    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_8;//524.288 KHz/8 = 65.536kHz
     SpiHandle.Init.FirstBit						= SPI_FIRSTBIT_MSB;
 		SpiHandle.Init.CRCCalculation    	= SPI_CRCCALCULATION_DISABLE;
     SpiHandle.Init.CRCPolynomial		  = 7;
@@ -141,6 +187,23 @@ uint8_t SPI_ExchangeByte(uint8_t input)
 
 //	printf("spi receive data:%x\n",SPI_ReceiveData(&SpiHandle));
 	return (SPI_ReceiveData(&SpiHandle));
+}
+
+// Function for sending and receiving data through SPI
+void SpiFunction(unsigned char OutputBuff[],unsigned char InputBuff[], unsigned int OutNoOfBytes, unsigned int InNoOfBytes)
+{
+	int i;
+
+	for(i=0;i<OutNoOfBytes;i++)
+	{
+    SPI_ExchangeByte(OutputBuff[i]);					// Send data
+	}
+   
+	for(i=0;i<InNoOfBytes;i++)
+	{
+		InputBuff[i] = SPI_ExchangeByte(0xFF);		// Receive data
+	}
+	/**/
 }
 
 /**

@@ -379,10 +379,9 @@ OUTPUT   : None
 void CC1101SendPacket(uint8_t *txbuffer, uint8_t size, TX_DATA_MODE mode)
 {
     uint8_t address;
-    uint8_t i,k,j;
-	
-		k = size/60;
-		j = size%60;
+    volatile uint8_t i;
+		uint32_t timeout;
+
     if(mode == BROADCAST)             {address=0;}
     else if(mode == ADDRESS_CHECK)    {address=CC1101ReadReg(CC1101_ADDR);}
     
@@ -397,32 +396,20 @@ void CC1101SendPacket(uint8_t *txbuffer, uint8_t size, TX_DATA_MODE mode)
         CC1101WriteReg(CC1101_TXFIFO, size);
     }
 		
-		if(size <= 60)
-		{
-			CC1101WriteMultiReg(CC1101_TXFIFO, txbuffer, size);
-			CC1101SetTRMode(TX_MODE);
-		}
-		else
-		{
-			CC1101WriteMultiReg(CC1101_TXFIFO, txbuffer, 60);
-			CC1101SetTRMode(TX_MODE);
-			for(i=1; i<k; i++)
-			{
-				while(CC1101_GDO2_READ() == 0);//等待tx fifo中断下降沿
-				while(CC1101_GDO2_READ() != 0);
-				CC1101WriteMultiReg(CC1101_TXFIFO, (txbuffer+60*i), 60);
-			}
-			if(j != 0)
-			{
-				while(CC1101_GDO2_READ() == 0);//等待tx fifo中断下降沿
-				while(CC1101_GDO2_READ() != 0);
-				CC1101WriteMultiReg(CC1101_TXFIFO, (txbuffer+60*k), j);
-			}
-		}
+		CC1101WriteMultiReg(CC1101_TXFIFO, txbuffer, size);
+		CC1101SetTRMode(TX_MODE);
 		
     //i = CC1101ReadStatus( CC1101_TXBYTES );//for test, TX status
-    while(CC1101_IRQ_READ() != 0);
-    while(CC1101_IRQ_READ() == 0);
+		timeout = Delay_TimeOut;
+    while(CC1101_IRQ_READ() != 0 && timeout != 0);
+		{
+			timeout--;
+		}
+		timeout = Delay_TimeOut;
+    while(CC1101_IRQ_READ() == 0 && timeout != 0);
+		{
+			timeout--;
+		}
     //i = CC1101ReadStatus( CC1101_TXBYTES );//for test, TX status
 
     CC1101ClrTXBuff();

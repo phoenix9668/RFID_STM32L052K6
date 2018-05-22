@@ -8,6 +8,7 @@
 #include "./tim/bsp_basic_tim.h"
 #include "./spi/bsp_spi.h"
 #include "./adc/bsp_adc.h"
+#include "./adxl362/adxl362.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -16,11 +17,11 @@
 #define TX              	0       	// cc1101发送模式
 #define RX              	1       	// cc1101接收模式
 #define IDLE          		2       	// cc1101空闲模式
-#define ACK_LENGTH      	234   		// 反馈数据包长度
-#define ACK_CNT				ACK_LENGTH/6	// floor(ACK_LENGTH/6)
-#define RECV_TIMEOUT			20    		// 接收等待2s
-#define SEND_LENGTH     	246			// 发送数据包长度
-#define SEND_PACKAGE_NUM	60			// 发生数据包数
+#define ACK_LENGTH      	60   		// 反馈数据包长度
+#define ACK_CNT				ACK_LENGTH/6-2	// floor(ACK_LENGTH/6)
+#define RECV_TIMEOUT			20   		// 接收等待2s
+#define SEND_LENGTH     	19			// 发送数据包长度
+#define SEND_PACKAGE_NUM	6				// 发生数据包数
 #define RECV_LENGTH   		18			// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -34,8 +35,6 @@ void RF_Initial(uint8_t addr, uint16_t sync, uint8_t mode);
 void System_Initial(void);
 void RF_SendPacket(uint8_t index);
 uint8_t RF_RecvHandler(void);
-void MMA7361L_ReadHandler(void);
-void MMA7361L_display(void);
 void DATAEEPROM_Program(uint32_t Address, uint32_t Data);
 uint32_t DATAEEPROM_Read(uint32_t Address);
 
