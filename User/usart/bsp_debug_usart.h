@@ -3,7 +3,7 @@
 
 #include "stm32l0xx.h"
 #include <stdio.h>
-//#define DEBUG
+#define DEBUG
 //#define UART_PROG
 extern void Error_Handler(void);
 extern UART_HandleTypeDef UartHandle;

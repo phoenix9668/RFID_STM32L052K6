@@ -15,6 +15,37 @@
 #include "./spi/bsp_spi.h"
 
 SPI_HandleTypeDef SpiHandle;
+extern void Delay(uint32_t nCount);
+
+void CC1101_CSN_LOW(void)
+{
+	Delay(2);
+	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET);
+	Delay(10);
+}
+
+void CC1101_CSN_HIGH(void)
+{
+//	Delay(1);
+	HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_SET);
+//	Delay(2);
+}
+
+void ADXL362_CSN_LOW(void)
+{
+	Delay(2);
+	HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_SET);
+	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_RESET);
+	Delay(10);
+}
+
+void ADXL362_CSN_HIGH(void)
+{
+	Delay(10);
+	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET);
+	Delay(2);
+}
 
 /**
   * @brief  GPIO_Config function
@@ -32,11 +63,11 @@ void GPIO_Config(void)
 //    CC1101_GDO2_GPIO_CLK_ENABLE();
 		ADXL362_INT1_GPIO_CLK_ENABLE();
 		ADXL362_INT2_GPIO_CLK_ENABLE();
-	
+
     //配置LED的GPIO引脚
     GPIO_InitStructure.Pin = LED_GREEN_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Pull  = GPIO_PULLUP;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(LED_GPIO_PORT, &GPIO_InitStructure);
 
@@ -45,7 +76,7 @@ void GPIO_Config(void)
 		//配置ADC_IN1的GPIO引脚
     GPIO_InitStructure.Pin = ADC_IN1_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull  = GPIO_NOPULL;
+    GPIO_InitStructure.Pull  = GPIO_PULLDOWN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(ADC_IN1_PORT, &GPIO_InitStructure);
 
@@ -64,7 +95,7 @@ void INT_GPIO_Config(void)
     //配置IRQ的GPIO引脚
     GPIO_InitStructure.Pin = CC1101_IRQ_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull = GPIO_NOPULL;
+    GPIO_InitStructure.Pull = GPIO_PULLUP;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(CC1101_IRQ_GPIO_PORT, &GPIO_InitStructure);
 
@@ -77,14 +108,14 @@ void INT_GPIO_Config(void)
 		
 		/* Configure INT2 pin as input floating */
 		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
 		GPIO_InitStructure.Pin = ADXL362_INT2_PIN;
 //		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 		HAL_GPIO_Init(ADXL362_INT2_GPIO_PORT, &GPIO_InitStructure);
 
 		/* Configure INT1 pin as input floating */
 		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
 		GPIO_InitStructure.Pin = ADXL362_INT1_PIN;
 //		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
 		HAL_GPIO_Init(ADXL362_INT1_GPIO_PORT, &GPIO_InitStructure);

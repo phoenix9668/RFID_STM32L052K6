@@ -18,7 +18,7 @@
 #include "./cc1101/cc1101_reg.h"
 #include "./spi/bsp_spi.h"
 
-#define Delay_TimeOut			200000
+#define Delay_TimeOut			5000
 
 /*===========================================================================
 ----------------------------------macro definitions--------------------------

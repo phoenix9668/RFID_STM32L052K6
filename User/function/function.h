@@ -7,7 +7,6 @@
 #include "./usart/bsp_debug_usart.h"
 #include "./tim/bsp_basic_tim.h"
 #include "./spi/bsp_spi.h"
-#include "./adc/bsp_adc.h"
 #include "./adxl362/adxl362.h"
 
 /* Exported types ------------------------------------------------------------*/
@@ -25,10 +24,6 @@
 #define RECV_LENGTH   		18			// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-extern uint8_t RecvFlag;      	// =1接收等待时间结束，=0不处理
-extern uint16_t RecvWaitTime;  	// 接收等待时间
-extern uint16_t ADC_ConvertedValue[MMA7361L_NOFCHANEL];// ADC转化的电压值通过MDA传递到SRAM
-
 /* Exported functions ------------------------------------------------------- */
 void MCU_Initial(void);
 void RF_Initial(uint8_t addr, uint16_t sync, uint8_t mode);

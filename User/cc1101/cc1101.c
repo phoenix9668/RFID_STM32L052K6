@@ -401,12 +401,12 @@ void CC1101SendPacket(uint8_t *txbuffer, uint8_t size, TX_DATA_MODE mode)
 		
     //i = CC1101ReadStatus( CC1101_TXBYTES );//for test, TX status
 		timeout = Delay_TimeOut;
-    while(CC1101_IRQ_READ() != 0 && timeout != 0);
+    while(CC1101_IRQ_READ() != 0 && timeout != 0)
 		{
 			timeout--;
 		}
 		timeout = Delay_TimeOut;
-    while(CC1101_IRQ_READ() == 0 && timeout != 0);
+    while(CC1101_IRQ_READ() == 0 && timeout != 0)
 		{
 			timeout--;
 		}

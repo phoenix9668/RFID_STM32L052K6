@@ -16,10 +16,9 @@ uint16_t sync_eeprom;
 uint32_t rfid_eeprom;
 uint8_t SendBuffer[SEND_LENGTH] = {0};// 发送数据包
 uint8_t RecvBuffer[RECV_LENGTH] = {0};// 接收数据包
-float ADC_ConvertedValueLocal[MMA7361L_NOFCHANEL];// 用于保存转化计算后的电压值
 uint8_t aRxBuffer[RXBUFFERSIZE];								// Buffer used for reception
 /* Private function prototypes -----------------------------------------------*/
-extern void Delay(__IO uint32_t nCount);
+extern void Delay(uint32_t nCount);
 /* Private functions ---------------------------------------------------------*/
 
 /*===========================================================================
@@ -33,9 +32,11 @@ void MCU_Initial(void)
 		#ifdef DEBUG
 			Debug_USART_Config();
 		#endif
+		Delay(0x100);
 		SPI_Config();
-		Delay(0xFFF);
+		Delay(0x100);
 		ADXL362_Init();
+		Delay(0x100);
 		INT_GPIO_Config();
 //    TIM_Config();
 }
@@ -96,7 +97,8 @@ uint8_t RF_RecvHandler(void)
 	uint32_t timeout;
 	
 	if(CC1101_IRQ_READ() == 0)         // 检测无线模块是否产生接收中断 
-		{			
+		{
+			__disable_irq();
 //			if(ADC_IN1_READ() == 1)
 				#ifdef DEBUG
 				printf("interrupt occur\n");
@@ -170,14 +172,14 @@ void RF_SendPacket(uint8_t index)
 	uint8_t i=0;
 	uint32_t data;
 	uint32_t dataeeprom;// 从eeprom中读出的数
-		
+
 //	if(HAL_TIM_Base_Stop_IT(&TimHandle) != HAL_OK)
 //  {
 //    /* Stoping Error */
 //    Error_Handler();
 //  }
 	
-	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
+//	HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
 	LED_GREEN_OFF();
 	
 	if(index == 4)
@@ -209,7 +211,7 @@ void RF_SendPacket(uint8_t index)
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);
+			Delay(0x10);
 		}
 	}
 	else if(index == 5)
@@ -228,7 +230,7 @@ void RF_SendPacket(uint8_t index)
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+			Delay(0x10);									// 计算得到平均27ms发送一次数据
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
 	}
@@ -252,7 +254,7 @@ void RF_SendPacket(uint8_t index)
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+			Delay(5);									// 计算得到平均27ms发送一次数据
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
 	}
@@ -286,7 +288,7 @@ void RF_SendPacket(uint8_t index)
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+			Delay(0x10);									// 计算得到平均27ms发送一次数据
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
 	}
@@ -307,7 +309,7 @@ void RF_SendPacket(uint8_t index)
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
+			Delay(0x10);									// 计算得到平均27ms发送一次数据
 //		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
 		}
 	}
@@ -373,10 +375,11 @@ void RF_SendPacket(uint8_t index)
 //    /* Starting Error */
 //    Error_Handler();
 //  }
-	
+
 //	Usart_SendString(&UartHandle, (uint8_t *)"Transmit OK\r\n");
 	RF_Initial(addr_eeprom, sync_eeprom, IDLE);
-	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+//	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
+	__enable_irq();
 	LED_GREEN_ON();
 }
 

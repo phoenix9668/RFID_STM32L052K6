@@ -44,16 +44,7 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
-uint8_t RecvFlag;       						// =1接收等待时间结束，=0不处理
-uint16_t RecvWaitTime;  						// 接收等待时间
-uint8_t index = 0;									// 接收标志
-
 /* Exported functions ------------------------------------------------------- */
-static void SystemClock_Config(void);
-//static void SystemPower_Config(void);
-void Error_Handler(void);
-static void Show_Message(void);
-void Delay(__IO uint32_t nCount);
 
 #endif /* __MAIN_H */
 

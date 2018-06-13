@@ -35,6 +35,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 extern uint8_t aRxBuffer[RXBUFFERSIZE];								// Buffer used for reception
 /** @addtogroup STM32L0xx_HAL_Examples
   * @{
@@ -46,11 +47,18 @@ extern uint8_t aRxBuffer[RXBUFFERSIZE];								// Buffer used for reception
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
+uint8_t index = 0;
 unsigned char Temp;
 uint32_t step = 0;
+uint32_t sysclockfreq;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
+static void SystemClock_Config(void);
+//static void SystemPower_Config(void);
+void Error_Handler(void);
+static void Show_Message(void);
+void Delay(__IO uint32_t nCount);
 /* Private functions ---------------------------------------------------------*/
 
 /*===========================================================================
@@ -59,7 +67,7 @@ uint32_t step = 0;
 ============================================================================*/
 int main(void)
 {
-	Delay(900000);
+	Delay(2000);
 	/* STM32L0xx HAL library initialization:
        - Configure the Flash prefetch, Flash preread and Buffer caches
        - Systick timer is configured by default as source of time base, but user 
@@ -74,7 +82,7 @@ int main(void)
 	/* Disable Prefetch Buffer */
   __HAL_FLASH_PREFETCH_BUFFER_DISABLE();
 
-  /* Configure the system clock @ 32 KHz */
+  /* Configure the system clock @ 64 KHz */
   SystemClock_Config();
 
   /* Configure the system Power */
@@ -83,7 +91,7 @@ int main(void)
 	System_Initial();
 
 	Show_Message();
-	
+
 	/* Enter LP RUN mode */
 	HAL_PWREx_EnableLowPowerRunMode();
 
@@ -98,7 +106,10 @@ int main(void)
 		
 //	__set_FAULTMASK(1);
 //	NVIC_SystemReset();
-		
+
+	sysclockfreq = HAL_RCC_GetSysClockFreq();
+	printf("sysclockfreq = %d\n",sysclockfreq);
+
 	while(1)
 		{
 			index = RF_RecvHandler();
@@ -196,7 +207,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
 		while(1)
     {
-			LED_GREEN_ON();
+			LED_GREEN_OFF();
     }
 }
 #endif
@@ -277,10 +288,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
   * @brief  System Clock Configuration
   *         The system Clock is configured as follow : 
   *            System Clock source            = (MSI)
-  *            MSI Range                      = 2
-  *            SYSCLK(Hz)                     = 32000
-  *            HCLK(Hz)                       = 32000
-  *            AHB Prescaler                  = 2
+  *            MSI Range                      = 0
+  *            SYSCLK(Hz)                     = 65536
+  *            HCLK(Hz)                       = 65536
+  *            AHB Prescaler                  = 1
   *            APB1 Prescaler                 = 1
   *            APB2 Prescaler                 = 1
   *            Main regulator output voltage  = Scale2 mode
@@ -298,12 +309,12 @@ static void SystemClock_Config(void)
   /* The voltage scaling allows optimizing the power consumption when the device is 
      clocked below the maximum system frequency, to update the voltage scaling value 
      regarding system frequency refer to product datasheet.  */
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE2);
 
   /* Enable MSI Oscillator */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
   RCC_OscInitStruct.MSIState = RCC_MSI_ON;
-  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_3;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_0;
   RCC_OscInitStruct.MSICalibrationValue = 0x00;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
   if(HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
@@ -316,7 +327,7 @@ static void SystemClock_Config(void)
      clocks dividers */
   RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | RCC_CLOCKTYPE_PCLK2);
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_MSI;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
   if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
@@ -324,9 +335,6 @@ static void SystemClock_Config(void)
     /* Initialization Error */
     Error_Handler();
   }
-
-  /* Set MSI range to 0 */
-//  __HAL_RCC_MSI_RANGE_CONFIG(RCC_MSIRANGE_0);
 
 }
 
@@ -376,11 +384,18 @@ static void SystemClock_Config(void)
   * @param  nCount:specifies the Delay time length.
   * @retval None
   */
-void Delay(__IO uint32_t nCount)
+void Delay(uint32_t nCount)
 {
-  while(nCount--)
-  {
-  }
+	uint32_t i;
+	uint16_t m = 500;
+
+	for(i = 0;i<=nCount*13; i++)
+	{
+		while(m)
+		{
+			m--;
+		}
+	}
 }
 
 /**
@@ -399,8 +414,8 @@ static void Show_Message(void)
 	ReadValueTemp = ADXL362RegisterRead(XL362_DEVID_AD);     	//Analog Devices device ID, 0xAD
 	if(ReadValueTemp == 0xAD)
 	{
-		LED_GREEN_TOG();
-		Delay(2000);
+		LED_GREEN_OFF();
+		Delay(500);
 	}
 	#ifdef DEBUG
 		printf("Analog Devices device ID: %x\n",ReadValueTemp);	 	//send via UART
@@ -408,8 +423,8 @@ static void Show_Message(void)
 	ReadValueTemp = ADXL362RegisterRead(XL362_DEVID_MST);    	//Analog Devices MEMS device ID, 0x1D
 	if(ReadValueTemp == 0x1D)
 	{
-		LED_GREEN_TOG();
-		Delay(2000);
+		LED_GREEN_ON();
+		Delay(500);
 	}
 	#ifdef DEBUG
 		printf("Analog Devices MEMS device ID: %x\n",ReadValueTemp);	//send via UART
@@ -417,8 +432,8 @@ static void Show_Message(void)
 	ReadValueTemp = ADXL362RegisterRead(XL362_PARTID);       	//part ID, 0xF2
 	if(ReadValueTemp == 0xF2)
 	{
-		LED_GREEN_TOG();
-		Delay(2000);
+		LED_GREEN_OFF();
+		Delay(500);
 	}
 	#ifdef DEBUG
 		printf("Part ID: %x\n",ReadValueTemp);										//send via UART
@@ -426,7 +441,7 @@ static void Show_Message(void)
 	ReadValueTemp = ADXL362RegisterRead(XL362_REVID);       	//version ID, 0x02
 	if(ReadValueTemp == 0x02)
 	{
-		LED_GREEN_TOG();
+		LED_GREEN_ON();
 	}
 	#ifdef DEBUG
 		printf("Version ID: %x\n",ReadValueTemp);									//send via UART
@@ -441,7 +456,7 @@ static void Show_Message(void)
 void Error_Handler(void)
 {
   /* User may add here some code to deal with this error */
-  LED_GREEN_ON();
+  LED_GREEN_OFF();
 	printf("error\n");
   while(1)
   {

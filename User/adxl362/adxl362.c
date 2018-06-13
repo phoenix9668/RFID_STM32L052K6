@@ -21,7 +21,7 @@
 #include "./adxl362/adxl362.h"
 #include "./spi/bsp_spi.h"
 
-extern void Delay(__IO uint32_t nCount);
+extern void Delay(uint32_t nCount);
 
 /*******************************************************************
   @brief unsigned char ADXL362RegisterRead(unsigned char Address)
@@ -38,7 +38,6 @@ unsigned char ADXL362RegisterRead(unsigned char Address)
     unsigned char ReceiveValue;
  
     ADXL362_CSN_LOW();              			//CS down  
-		Delay(100);
     SendTemp[0] = 0x0B;                 //0x0B: read register command
     SendTemp[1] = Address;              //address byte
     SpiFunction(SendTemp, ReceiveTemp, 2, 1);
@@ -62,7 +61,6 @@ void ADXL362RegisterWrite(unsigned char Address, unsigned char SendValue)
     unsigned char ReceiveTemp[3];
     
     ADXL362_CSN_LOW();              			//CS down
-		Delay(100);
     SendTemp[0] = 0x0A;                 //0x0A: write register
     SendTemp[1] = Address;              //address byte
     SendTemp[2] = SendValue;
@@ -86,7 +84,6 @@ void ADXL362BurstRead(unsigned char Address, unsigned char NumberofRegisters, un
     unsigned char SendTemp[2];
 
     ADXL362_CSN_LOW();         			//CS down
-		Delay(100);
     SendTemp[0] = 0x0B;            	//0x0B: read register  
     SendTemp[1] = Address;         	//address byte
     SpiFunction(SendTemp, RegisterData, 2, NumberofRegisters);
@@ -110,7 +107,6 @@ void ADXL362BurstWrite(unsigned char Address, unsigned char NumberofRegisters, u
     unsigned char RegisterIndex;
   
     ADXL362_CSN_LOW();										//CS down
-		Delay(100);
     SendTemp[0] = 0x0A;                 //0x0A: write register
     SendTemp[1] = Address;              //address byte
     for (RegisterIndex=0; RegisterIndex<NumberofRegisters; RegisterIndex++)
@@ -134,7 +130,6 @@ void ADXL362FifoRead(unsigned int NumberofRegisters, unsigned char *RegisterData
 {
 		unsigned char SendTemp[1];
     ADXL362_CSN_LOW();         			//CS down
-		Delay(100);
 		SendTemp[0] = 0x0D;            	//0x0D: read register
     SpiFunction(SendTemp, RegisterData, 1, NumberofRegisters);
     ADXL362_CSN_HIGH();        			//CS up
@@ -152,7 +147,7 @@ void ADXL362FifoRead(unsigned int NumberofRegisters, unsigned char *RegisterData
 void ADXL362_Init(void)
 {
 		ADXL362RegisterWrite(XL362_SOFT_RESET,0x52);   						// software reset
-		Delay(20000);
+		Delay(2000);
 		ADXL362RegisterWrite(XL362_THRESH_ACT_L,0x5E);						//set active threshold equip 350mg
 		ADXL362RegisterWrite(XL362_THRESH_ACT_H,0x01);
 		ADXL362RegisterWrite(XL362_THRESH_INACT_L,0x96);					//set inactive threshold equip 150mg
@@ -167,6 +162,6 @@ void ADXL362_Init(void)
 		ADXL362RegisterWrite(XL362_FILTER_CTL,0x10);             	//select 2g range,ODR:12.5Hz
     //any changes to the registers before the POWER_CTL register (Register 0x00 to Register 0x2C) should be made with the device in standby
     ADXL362RegisterWrite(XL362_POWER_CTL,0x0A);              	//select measurement mode
-		Delay(2000);
+		Delay(200);
 }
 

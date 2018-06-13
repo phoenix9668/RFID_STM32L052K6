@@ -60,9 +60,9 @@ you must offer the following functions for this module
 #define CC1101_GDO2_GPIO_PORT           GPIOA                       /* GPIOA */
 #define CC1101_GDO2_GPIO_CLK_ENABLE()  	__HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define CC1101_CSN_LOW()                HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET)
+//#define CC1101_CSN_LOW()                HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET)
 
-#define CC1101_CSN_HIGH()               HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_SET)
+//#define CC1101_CSN_HIGH()               HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_SET)
 
 #define CC1101_IRQ_READ()               HAL_GPIO_ReadPin(CC1101_IRQ_GPIO_PORT, CC1101_IRQ_PIN)
 
@@ -85,9 +85,9 @@ you must offer the following functions for this module
 #define ADXL362_INT2_GPIO_PORT         	GPIOA                       /* GPIOA */
 #define ADXL362_INT2_GPIO_CLK_ENABLE() 	__HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define ADXL362_CSN_LOW()             	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_RESET)
+//#define ADXL362_CSN_LOW()             	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_RESET)
 
-#define ADXL362_CSN_HIGH()             	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET)
+//#define ADXL362_CSN_HIGH()             	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET)
 
 #define ADXL362_INT1_READ()          		HAL_GPIO_ReadPin(ADXL362_INT1_GPIO_PORT, ADXL362_INT1_PIN)
 
@@ -118,6 +118,10 @@ you must offer the following functions for this module
 #define	ADC_IN1_CLK_ENABLE()        		__HAL_RCC_GPIOA_CLK_ENABLE()
 #define ADC_IN1_READ()               		HAL_GPIO_ReadPin(ADC_IN1_PORT, ADC_IN1_PIN)
 
+void CC1101_CSN_LOW(void);
+void CC1101_CSN_HIGH(void);
+void ADXL362_CSN_LOW(void);
+void ADXL362_CSN_HIGH(void);
 void GPIO_Config(void);                // 初始化通用IO端口
 void INT_GPIO_Config(void);
 void SPI_Config(void);                 // 初始化SPI
