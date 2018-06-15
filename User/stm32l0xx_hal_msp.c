@@ -44,7 +44,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
-#include "./tim/bsp_basic_tim.h"
 #include "./usart/bsp_debug_usart.h"
 
 /** @addtogroup STM32L0xx_HAL_Driver
@@ -88,28 +87,6 @@ void HAL_MspDeInit(void)
   /* NOTE : This function is eventually modified by the user */
 
 }
-
-/**
-  * @brief TIM MSP Initialization 
-  *        This function configures the hardware resources used in this example: 
-  *           - Peripheral's clock enable
-  *           - Peripheral's GPIO Configuration  
-  * @param htim: TIM handle pointer
-  * @retval None
-  */
-//void HAL_TIM_Base_MspInit(TIM_HandleTypeDef *htim)
-//{
-//  /*##-1- Enable peripherals and GPIO Clocks #################################*/
-//  /* TIMx Peripheral clock enable */
-//  BASIC_TIM_CLK_ENABLE();
-//  
-//  /*##-2- Configure the NVIC for TIMx ########################################*/
-//  /* Set Interrupt Group Priority */ 
-//  HAL_NVIC_SetPriority(BASIC_TIM_IRQn, 0, 0);
-//  
-//  /* Enable the TIMx global Interrupt */
-//  HAL_NVIC_EnableIRQ(BASIC_TIM_IRQn);
-//}
 
 /**
   * @brief UART MSP De-Initialization 

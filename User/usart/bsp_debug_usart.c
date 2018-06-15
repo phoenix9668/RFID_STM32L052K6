@@ -14,10 +14,6 @@
 #include "./usart/bsp_debug_usart.h"
 
 UART_HandleTypeDef UartHandle;
-uint8_t Rxflag=0;
-uint8_t ucTemp;
-uint8_t ucaRxBuf[256];
-uint16_t usRxCount=0;
 
  /**
   * @brief  DEBUG_USART GPIO 配置,工作模式配置。115200 8-N-1 ，中断接收模式
@@ -130,36 +126,5 @@ int fgetc(FILE *f)
 	HAL_UART_Receive(&UartHandle, (uint8_t *)&ch, 1, 1000);	
 	return (ch);
 }
-
-//void Scanf_Function(void)
-//{
-////	uint8_t i;
-//	if(Rxflag)
-//	{
-//		if (usRxCount < sizeof(ucaRxBuf))
-//		{
-//			ucaRxBuf[usRxCount++] = ucTemp;
-////			printf("ucTemp = %d",ucTemp);
-//		}
-//		else
-//		{
-//			usRxCount = 0;
-//		}
-//			
-//	/* 简单的通信协议，遇到回车换行符认为1个命令帧，可自行加其它判断实现自定义命令 */
-//	/* 遇到换行字符，认为接收到一个命令 */
-//	if (ucTemp == 0x0A)	/* 换行字符 */
-//	{		
-//		/*检测到有回车字符就把数据返回给上位机*/
-//		HAL_UART_Transmit( &UartHandle, (uint8_t *)ucaRxBuf, usRxCount, 1000);
-////		for(i=0; i<usRxCount; i++)
-////		{
-////			printf("ucaRxBuf = %x, usRxCount = %d",ucaRxBuf[i],usRxCount);
-////		}
-//		usRxCount = 0;
-//	}
-//		Rxflag=0;
-//	}
-//}
 
 /*********************************************END OF FILE**********************/

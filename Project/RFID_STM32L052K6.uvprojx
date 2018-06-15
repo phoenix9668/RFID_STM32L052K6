@@ -516,11 +516,6 @@
               <FilePath>..\User\spi\bsp_spi.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_basic_tim.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\User\tim\bsp_basic_tim.c</FilePath>
-            </File>
-            <File>
               <FileName>bsp_debug_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\User\usart\bsp_debug_usart.c</FilePath>

@@ -22,7 +22,7 @@ void CC1101_CSN_LOW(void)
 	Delay(2);
 	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_RESET);
-	Delay(10);
+	Delay(2);
 }
 
 void CC1101_CSN_HIGH(void)
@@ -37,12 +37,12 @@ void ADXL362_CSN_LOW(void)
 	Delay(2);
 	HAL_GPIO_WritePin(CC1101_SPI_CSN_GPIO_PORT, CC1101_SPI_CSN_PIN, GPIO_PIN_SET);
 	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_RESET);
-	Delay(10);
+	Delay(2);
 }
 
 void ADXL362_CSN_HIGH(void)
 {
-	Delay(10);
+	Delay(2);
 	HAL_GPIO_WritePin(ADXL362_SPI_CSN_GPIO_PORT, ADXL362_SPI_CSN_PIN, GPIO_PIN_SET);
 	Delay(2);
 }
@@ -80,7 +80,6 @@ void GPIO_Config(void)
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(ADC_IN1_PORT, &GPIO_InitStructure);
 
-
 }
 
 /**
@@ -92,7 +91,6 @@ void INT_GPIO_Config(void)
 {
 		GPIO_InitTypeDef GPIO_InitStructure;
 	
-    //ÅäÖÃIRQµÄGPIOÒý½Å
     GPIO_InitStructure.Pin = CC1101_IRQ_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
     GPIO_InitStructure.Pull = GPIO_PULLUP;
@@ -110,14 +108,12 @@ void INT_GPIO_Config(void)
 		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
 		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
 		GPIO_InitStructure.Pin = ADXL362_INT2_PIN;
-//		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 		HAL_GPIO_Init(ADXL362_INT2_GPIO_PORT, &GPIO_InitStructure);
 
 		/* Configure INT1 pin as input floating */
 		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
 		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
 		GPIO_InitStructure.Pin = ADXL362_INT1_PIN;
-//		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
 		HAL_GPIO_Init(ADXL362_INT1_GPIO_PORT, &GPIO_InitStructure);
 
 		/* Enable and set EXTI4_15 Interrupt to the lowest priority */
@@ -185,7 +181,7 @@ void SPI_Config(void)
     SpiHandle.Init.CLKPolarity				= SPI_POLARITY_LOW;
     SpiHandle.Init.CLKPhase 				  = SPI_PHASE_1EDGE;
     SpiHandle.Init.NSS 								= SPI_NSS_SOFT;
-    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_8;//524.288 KHz/8 = 65.536kHz
+    SpiHandle.Init.BaudRatePrescaler 	= SPI_BAUDRATEPRESCALER_2;//65.536 KHz/2 = 32.768kHz
     SpiHandle.Init.FirstBit						= SPI_FIRSTBIT_MSB;
 		SpiHandle.Init.CRCCalculation    	= SPI_CRCCALCULATION_DISABLE;
     SpiHandle.Init.CRCPolynomial		  = 7;

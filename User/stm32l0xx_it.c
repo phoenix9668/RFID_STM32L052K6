@@ -37,7 +37,6 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_it.h"
-#include "./function/function.h"
 
 /** @addtogroup STM32L0xx_HAL_Examples
   * @{
@@ -51,13 +50,10 @@
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
-extern TIM_HandleTypeDef	TimHandle;
 /* UART handler declared in "bsp_debug_usart.c" file */
 extern UART_HandleTypeDef UartHandle;
-extern uint8_t Rxflag;
-extern uint8_t ucTemp;
-extern uint8_t aRxBuffer[4];
 /* Private function prototypes -----------------------------------------------*/
+extern void HAL_SysTick_Decrement(void);
 /* Private functions ---------------------------------------------------------*/
 
 /******************************************************************************/
@@ -120,7 +116,9 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
-  HAL_IncTick();
+//  HAL_IncTick();
+	HAL_SysTick_Decrement();
+
 }
 
 /******************************************************************************/
@@ -138,17 +136,7 @@ void SysTick_Handler(void)
 //{
 //  HAL_DMA_IRQHandler(ADC_Handle1.DMA_Handle);
 //}
-/**
-  * @brief  This function handles TIM interrupt request.
-  * @param  None
-  * @retval None
-  */
-//void BASIC_TIM_IRQHandler(void)
-//{
-//  HAL_TIM_IRQHandler(&TimHandle);
-//}
 
-#ifdef UART_PROG
 /**
   * @brief  This function handles UART interrupt request.  
   * @param  None
@@ -158,14 +146,8 @@ void SysTick_Handler(void)
   */
 void DEBUG_USART_IRQHandler(void)
 {
-//	if(__HAL_UART_GET_IT_SOURCE(&UartHandle, UART_IT_RXNE) != RESET)
-//	{
-//		Rxflag = 1;
-//		HAL_UART_Receive(&UartHandle, (uint8_t *)aRxBuffer, 4, 1000);
-//	}
   HAL_UART_IRQHandler(&UartHandle);
 }
-#endif
 
 /**
   * @brief  This function handles External lines 0 to 1 interrupt request.

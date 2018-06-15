@@ -5,7 +5,6 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
 #include "./usart/bsp_debug_usart.h"
-#include "./tim/bsp_basic_tim.h"
 #include "./spi/bsp_spi.h"
 #include "./adxl362/adxl362.h"
 
@@ -20,7 +19,7 @@
 #define ACK_CNT				ACK_LENGTH/6-2	// floor(ACK_LENGTH/6)
 #define RECV_TIMEOUT			20   		// 接收等待2s
 #define SEND_LENGTH     	19			// 发送数据包长度
-#define SEND_PACKAGE_NUM	6				// 发生数据包数
+#define SEND_PACKAGE_NUM	3				// 发生数据包数
 #define RECV_LENGTH   		18			// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
@@ -32,6 +31,7 @@ void RF_SendPacket(uint8_t index);
 uint8_t RF_RecvHandler(void);
 void DATAEEPROM_Program(uint32_t Address, uint32_t Data);
 uint32_t DATAEEPROM_Read(uint32_t Address);
+void HAL_SysTick_Decrement(void);
 
 #endif /* __FUNCTION_H */
 
