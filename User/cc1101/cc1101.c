@@ -202,8 +202,18 @@ void CC1101WORInit(void)
     CC1101WriteReg(CC1101_MCSM0, 0x18);
     CC1101WriteReg(CC1101_WORCTRL, 0x78); //EVENT1 = 7,RC_CAL = 1,WOR_RES = 0
 																					//tEvent1 = 750/fXOSC * 7 = 48*750/(26*10^6) = 1.385ms
-    CC1101WriteReg(CC1101_MCSM2, 0x00);		//RX_TIME = 0,Duty cycle = 12.5%
-																					//tRXtimeout = tEvent0 * Duty cycle = 129.75ms
+//    CC1101WriteReg(CC1101_MCSM2, 0x00);		//RX_TIME = 0,Duty cycle = 12.5%
+//																					//tRXtimeout = tEvent0 * Duty cycle = 129.75ms
+//		CC1101WriteReg(CC1101_MCSM2, 0x01);		//RX_TIME = 1,Duty cycle = 6.25%
+//																					//tRXtimeout = tEvent0 * Duty cycle = 64.875ms
+//		CC1101WriteReg(CC1101_MCSM2, 0x02);		//RX_TIME = 2,Duty cycle = 3.125%
+//																					//tRXtimeout = tEvent0 * Duty cycle = 32.4375ms
+		CC1101WriteReg(CC1101_MCSM2, 0x03);		//RX_TIME = 3,Duty cycle = 1.563%
+																					//tRXtimeout = tEvent0 * Duty cycle = 16.21875ms
+//		CC1101WriteReg(CC1101_MCSM2, 0x04);		//RX_TIME = 4,Duty cycle = 0.781%
+//																					//tRXtimeout = tEvent0 * Duty cycle = 8.109375ms
+//		CC1101WriteReg(CC1101_MCSM2, 0x05);		//RX_TIME = 5,Duty cycle = 0.391%
+//																					//tRXtimeout = tEvent0 * Duty cycle = 4.0546875ms
     CC1101WriteReg(CC1101_WOREVT1, 0x8C);
 		CC1101WriteReg(CC1101_WOREVT0, 0xA0);	//EVENT0 = 0d36000
 																					//tEvent0 = 750/fXOSC * EVENT0 * 2^(5*WOR_RES)
@@ -574,8 +584,8 @@ void CC1101Init(uint8_t addr, uint16_t sync)
 
     CC1101WriteMultiReg(CC1101_PATABLE, PaTabel, 8);
 
-    i = CC1101ReadStatus(CC1101_PARTNUM);//for test, must be 0x00
-    i = CC1101ReadStatus(CC1101_VERSION);//for test, refer to the datasheet,must be 0x14
+//    i = CC1101ReadStatus(CC1101_PARTNUM);//for test, must be 0x00
+//    i = CC1101ReadStatus(CC1101_VERSION);//for test, refer to the datasheet,must be 0x14
 }
 /*
 ================================================================================

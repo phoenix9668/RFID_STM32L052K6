@@ -52,6 +52,8 @@
 /* Private variables ---------------------------------------------------------*/
 /* UART handler declared in "bsp_debug_usart.c" file */
 extern UART_HandleTypeDef UartHandle;
+/* WWDG handler declared in "bsp_wwdg.c" file */
+extern WWDG_HandleTypeDef WwdgHandle;
 /* Private function prototypes -----------------------------------------------*/
 extern void HAL_SysTick_Decrement(void);
 /* Private functions ---------------------------------------------------------*/
@@ -158,6 +160,14 @@ void EXTI4_15_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(ADXL362_INT1_PIN);
 //	printf("burst\n");
+}
+
+/**
+* @brief This function handles Window watchdog interrupt.
+*/
+void WWDG_IRQHandler(void)
+{
+  HAL_WWDG_IRQHandler(&WwdgHandle);
 }
 
 /**

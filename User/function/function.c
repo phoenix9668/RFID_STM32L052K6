@@ -4,7 +4,7 @@
 /* Private typedef -----------------------------------------------------------*/
 /* UART handler declared in "bsp_debug_usart.c" file */
 extern UART_HandleTypeDef UartHandle;
-extern uint32_t step;
+extern __IO uint32_t step;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -17,7 +17,7 @@ uint8_t SendBuffer[SEND_LENGTH] = {0};// 发送数据包
 uint8_t RecvBuffer[RECV_LENGTH] = {0};// 接收数据包
 uint8_t aRxBuffer[RXBUFFERSIZE];			// Buffer used for reception
 /* Private function prototypes -----------------------------------------------*/
-extern void Delay(uint32_t nCount);
+extern void Delay(__IO uint32_t nCount);
 /* Private functions ---------------------------------------------------------*/
 
 /*===========================================================================
@@ -101,7 +101,7 @@ uint8_t RF_RecvHandler(void)
 	if(CC1101_IRQ_READ() == 0)         // 检测无线模块是否产生接收中断 
 		{
 			HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
-			__disable_irq();
+//			__disable_irq();
 			if(ADC_IN1_READ() == 1)
 			{
 //				#ifdef DEBUG
@@ -216,7 +216,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x10);
+			Delay(0x1000);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -235,7 +235,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x10);
+			Delay(0x1000);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -258,7 +258,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x10);
+			Delay(0x1000);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -291,7 +291,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x10);
+			Delay(0x1000);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -311,7 +311,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x10);
+			Delay(0x1000);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -375,7 +375,7 @@ void RF_SendPacket(uint8_t index)
 
 //	Usart_SendString(&UartHandle, (uint8_t *)"Transmit OK\r\n");
 	RF_Initial(addr_eeprom, sync_eeprom, IDLE);
-	__enable_irq();
+//	__enable_irq();
 	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 	LED_GREEN_ON();
 }

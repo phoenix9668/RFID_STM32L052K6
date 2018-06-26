@@ -18,7 +18,6 @@
 #include "stm32l0xx.h"
 #include "./cc1101/cc1101.h"
 #include "./usart/bsp_debug_usart.h"
-extern void Error_Handler(void);
 /**
   * @brief  CC1101 SPI Interface pins
   */

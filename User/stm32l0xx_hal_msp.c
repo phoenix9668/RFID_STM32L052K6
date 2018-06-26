@@ -113,6 +113,25 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef *huart)
 }
 
 /**
+  * @brief WWDG MSP Initialization
+  *        This function configures the hardware resources used in this example:
+  *           - Peripheral's clock enable
+  * @param hwwdg: WWDG handle pointer
+  * @retval None
+  */
+void HAL_WWDG_MspInit(WWDG_HandleTypeDef *hwwdg)
+{
+	if(hwwdg->Instance==WWDG)
+  {
+		/* WWDG Peripheral clock enable */
+		__HAL_RCC_WWDG_CLK_ENABLE();
+		/* WWDG interrupt Init */
+		HAL_NVIC_SetPriority(WWDG_IRQn, 0, 0);
+		HAL_NVIC_EnableIRQ(WWDG_IRQn);
+	}
+}
+
+/**
   * @}
   */
 

@@ -15,7 +15,8 @@
 #include "./spi/bsp_spi.h"
 
 SPI_HandleTypeDef SpiHandle;
-extern void Delay(uint32_t nCount);
+extern void Delay(__IO uint32_t nCount);
+extern void Error_Handler(void);
 
 void CC1101_CSN_LOW(void)
 {
@@ -93,26 +94,24 @@ void INT_GPIO_Config(void)
 	
     GPIO_InitStructure.Pin = CC1101_IRQ_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStructure.Pull = GPIO_PULLUP;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(CC1101_IRQ_GPIO_PORT, &GPIO_InitStructure);
 
 		/* Configure GDO2 pin as input floating */
-//		GPIO_InitStructure.Mode = GPIO_MODE_IT_FALLING;
-//		GPIO_InitStructure.Pull = GPIO_NOPULL;
-//		GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
-//		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
-//		HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
 		
 		/* Configure INT2 pin as input floating */
 		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
 		GPIO_InitStructure.Pin = ADXL362_INT2_PIN;
 		HAL_GPIO_Init(ADXL362_INT2_GPIO_PORT, &GPIO_InitStructure);
 
 		/* Configure INT1 pin as input floating */
 		GPIO_InitStructure.Mode = GPIO_MODE_IT_RISING;
-		GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
 		GPIO_InitStructure.Pin = ADXL362_INT1_PIN;
 		HAL_GPIO_Init(ADXL362_INT1_GPIO_PORT, &GPIO_InitStructure);
 
@@ -155,21 +154,21 @@ void SPI_Config(void)
     /* Set SPI_SCK Pin */
     GPIO_InitStructure.Pin = CC1101_SPI_SCK_PIN;
     GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-    GPIO_InitStructure.Pull = GPIO_PULLDOWN;
+    GPIO_InitStructure.Pull = GPIO_NOPULL;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
 		GPIO_InitStructure.Alternate = CC1101_SPI_SCK_AF;
     HAL_GPIO_Init(CC1101_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
-    
-    /* Set SPI_MISO Pin */
-    GPIO_InitStructure.Pin = CC1101_SPI_MISO_PIN;
-		GPIO_InitStructure.Pull = GPIO_PULLUP;
-		GPIO_InitStructure.Alternate = CC1101_SPI_MISO_AF;
-    HAL_GPIO_Init(CC1101_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
     
     /* Set SPI_MOSI Pin */
     GPIO_InitStructure.Pin = CC1101_SPI_MOSI_PIN;
 		GPIO_InitStructure.Alternate = CC1101_SPI_MOSI_AF;
     HAL_GPIO_Init(CC1101_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+
+    /* Set SPI_MISO Pin */
+    GPIO_InitStructure.Pin = CC1101_SPI_MISO_PIN;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Alternate = CC1101_SPI_MISO_AF;
+    HAL_GPIO_Init(CC1101_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
     
 		/* Enable the SPI periph */
     CC1101_SPI_CLK_ENABLE();

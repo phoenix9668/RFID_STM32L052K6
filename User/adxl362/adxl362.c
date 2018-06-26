@@ -21,7 +21,7 @@
 #include "./adxl362/adxl362.h"
 #include "./spi/bsp_spi.h"
 
-extern void Delay(uint32_t nCount);
+extern void Delay(__IO uint32_t nCount);
 
 /*******************************************************************
   @brief unsigned char ADXL362RegisterRead(unsigned char Address)

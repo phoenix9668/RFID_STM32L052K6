@@ -46,10 +46,12 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-uint8_t index = 0;
+uint8_t index = 0x0;
 unsigned char Temp;
-uint32_t timedelay = Time_Delay;
-uint32_t step = 0;
+__IO uint16_t timedelay;
+__IO uint8_t wwdg_time;
+__IO uint8_t wwdg_flag;
+__IO uint32_t step;
 uint32_t sysclockfreq;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -82,20 +84,23 @@ int main(void)
 	HAL_Init();
 
 	/* Disable Prefetch Buffer */
-//  __HAL_FLASH_PREFETCH_BUFFER_DISABLE();
+  __HAL_FLASH_PREFETCH_BUFFER_DISABLE();
 
   /* Configure the system clock @ 64 KHz */
   SystemClock_Config();
 	
 	System_Initial();
+	
+	/* Check if the system has resumed from WWDG reset */
+	WWDGRST_Clear();
 
 	Show_Message();
-
+	
 	/* Enter LP RUN mode */
 	HAL_PWREx_EnableLowPowerRunMode();
 
 	/* Wait until the system enters LP RUN and the Regulator is in LP mode */
-	while(__HAL_PWR_GET_FLAG(PWR_FLAG_REGLP) == RESET){}
+	while(__HAL_PWR_GET_FLAG(PWR_FLAG_REGLP) == RESET){}	
 
 //	/* Exit LP RUN mode */
 //	HAL_PWREx_DisableLowPowerRunMode();
@@ -103,15 +108,20 @@ int main(void)
 //	/* Wait until the system exits LP RUN and the Regulator is in main mode */
 //	while(__HAL_PWR_GET_FLAG(PWR_FLAG_REGLP) != RESET){}
 
-//	__set_FAULTMASK(1);
-//	NVIC_SystemReset();
-
 	sysclockfreq = HAL_RCC_GetSysClockFreq();
 //	printf("sysclockfreq = %d\n",sysclockfreq);
-	/*Configure the SysTick to have interrupt in 1ms time basis*/
+	/*Configure the SysTick to have interrupt in 10s time basis*/
 	HAL_SYSTICK_Config(sysclockfreq*10);
 	/*Configure the SysTick IRQ priority */
 	HAL_NVIC_SetPriority(SysTick_IRQn, TICK_INT_PRIORITY ,0U);
+
+	/* Init & Start WWDG peripheral */
+	WWDG_Config();
+
+	wwdg_time = 0x3;
+	timedelay = Time_Delay;
+	step = DATAEEPROM_Read(EEPROM_START_ADDR+8);
+	DATAEEPROM_Program(EEPROM_START_ADDR+8, 0x0);
 
 	while(1)
 		{
@@ -120,11 +130,27 @@ int main(void)
 			{
 				RF_SendPacket(index);
 			}
+			if(wwdg_time == 0x0)
+			{
+				if(ADC_IN1_READ() == 1)
+				{
+					printf("timedelay_1 = %d\n",timedelay);
+					printf("wwdg_time_1 = %d\n",wwdg_time);
+				}
+				WWDG_Refresh();
+				wwdg_time = 0x3;
+			}
 			if(timedelay == 0x0)
 			{
+				if(ADC_IN1_READ() == 1)
+				{
+					printf("timedelay_2 = %d\n",timedelay);
+					printf("wwdg_time_2 = %d\n",wwdg_time);
+				}
 				RF_Initial(addr_eeprom, sync_eeprom, IDLE);
 				timedelay = Time_Delay;
 			}
+			wwdg_flag = 0x1;
 		}
 }
 
@@ -241,6 +267,33 @@ void HAL_SysTick_Decrement(void)
 	{
 		timedelay--;
 	}
+	if(wwdg_time != 0x0)
+	{
+		wwdg_time--;
+	}
+}
+
+/**
+  * @brief  WWDG Early Wakeup callback.
+  * @param  hwwdg  pointer to a WWDG_HandleTypeDef structure that contains
+  *                the configuration information for the specified WWDG module.
+  * @retval None
+  */
+void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* hwwdg)
+{
+	if(wwdg_flag == 0x1)
+	{
+		WWDG_Refresh();
+		if(ADC_IN1_READ() == 1)
+		{
+			printf("EarlyWakeupCallback\n");
+			printf("wwdg_time = %d\n",wwdg_time);
+			printf("wwdg_flag = %d\n",wwdg_flag);
+		}
+		wwdg_time = 0x3;
+		wwdg_flag = 0x0;
+	}
+	DATAEEPROM_Program(EEPROM_START_ADDR+8, step);
 }
 
 /**
@@ -302,7 +355,7 @@ static void SystemClock_Config(void)
   * @param  nCount:specifies the Delay time length.
   * @retval None
   */
-void Delay(uint32_t nCount)
+void Delay(__IO uint32_t nCount)
 {
 	uint32_t i;
 	uint16_t m = 500;
