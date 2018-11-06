@@ -19,7 +19,7 @@
 #define ACK_CNT				ACK_LENGTH/6-2	// floor(ACK_LENGTH/6)
 #define RECV_TIMEOUT			20   		// 接收等待2s
 #define SEND_LENGTH     	19			// 发送数据包长度
-#define SEND_PACKAGE_NUM	2				// 发生数据包数
+#define SEND_PACKAGE_NUM	3				// 发生数据包数
 #define RECV_LENGTH   		18			// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/

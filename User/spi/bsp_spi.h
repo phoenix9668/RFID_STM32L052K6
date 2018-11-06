@@ -117,6 +117,23 @@ you must offer the following functions for this module
 #define	ADC_IN1_CLK_ENABLE()        		__HAL_RCC_GPIOA_CLK_ENABLE()
 #define ADC_IN1_READ()               		HAL_GPIO_ReadPin(ADC_IN1_PORT, ADC_IN1_PIN)
 
+/**
+  * @brief  No Used Interface pins
+  */
+#define PA0_PIN        							GPIO_PIN_0
+#define PA4_PIN        							GPIO_PIN_4
+#define PA8_PIN        							GPIO_PIN_8
+#define PA9_PIN        							GPIO_PIN_9
+#define PA10_PIN        						GPIO_PIN_10
+#define PA11_PIN        						GPIO_PIN_11
+
+#define PB0_PIN        							GPIO_PIN_0
+#define PB1_PIN        							GPIO_PIN_1
+
+#define PC14_PIN        						GPIO_PIN_14
+#define PC15_PIN        						GPIO_PIN_15
+
+
 void CC1101_CSN_LOW(void);
 void CC1101_CSN_HIGH(void);
 void ADXL362_CSN_LOW(void);

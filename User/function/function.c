@@ -216,7 +216,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x1000);
+			Delay(0x500);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -235,7 +235,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x1000);
+			Delay(0x500);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -258,7 +258,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x1000);
+			Delay(0x500);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -291,7 +291,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x1000);
+			Delay(0x500);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -311,7 +311,7 @@ void RF_SendPacket(uint8_t index)
 		SendBuffer[18] = RSSI;
 		for(i=0; i<SEND_PACKAGE_NUM; i++)
 		{
-			Delay(0x1000);
+			Delay(0x500);
 			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
 		}
 	}
@@ -373,8 +373,10 @@ void RF_SendPacket(uint8_t index)
 	for(i=0; i<SEND_LENGTH; i++) // clear array
 	{SendBuffer[i] = 0;}
 
-//	Usart_SendString(&UartHandle, (uint8_t *)"Transmit OK\r\n");
-	RF_Initial(addr_eeprom, sync_eeprom, IDLE);
+//	RF_Initial(addr_eeprom, sync_eeprom, IDLE);
+	CC1101SetIdle();
+	CC1101WORInit();
+	CC1101SetWORMode();
 //	__enable_irq();
 	HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 	LED_GREEN_ON();

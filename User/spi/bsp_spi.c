@@ -80,7 +80,41 @@ void GPIO_Config(void)
     GPIO_InitStructure.Pull  = GPIO_PULLDOWN;
     GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(ADC_IN1_PORT, &GPIO_InitStructure);
+		
+		/* Enable GPIOs clock */
+		__HAL_RCC_GPIOA_CLK_ENABLE();
+		__HAL_RCC_GPIOB_CLK_ENABLE();
+		__HAL_RCC_GPIOC_CLK_ENABLE();
+	
+		/* Configure GPIO port pins in Analog Input mode (floating input trigger OFF) */
+		GPIO_InitStructure.Pin = PA0_PIN;
+		GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PA4_PIN;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PA8_PIN;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PA9_PIN;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PA10_PIN;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PA11_PIN;
+		HAL_GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+		GPIO_InitStructure.Pin = PB0_PIN;
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PB1_PIN;
+		HAL_GPIO_Init(GPIOB, &GPIO_InitStructure);
+		
+		GPIO_InitStructure.Pin = PC14_PIN;
+		HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+		GPIO_InitStructure.Pin = PC15_PIN;
+		HAL_GPIO_Init(GPIOC, &GPIO_InitStructure);
+		
+		/* Disable GPIOs clock */
+		__HAL_RCC_GPIOC_CLK_DISABLE();
+		
 }
 
 /**
@@ -100,11 +134,12 @@ void INT_GPIO_Config(void)
 
 		/* Configure GDO2 pin as input floating */
 		GPIO_InitStructure.Pin = CC1101_GDO2_PIN;
+		GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
 		GPIO_InitStructure.Pull = GPIO_NOPULL;
 		HAL_GPIO_Init(CC1101_GDO2_GPIO_PORT, &GPIO_InitStructure);
 		
 		/* Configure INT2 pin as input floating */
-		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
+		GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
 		GPIO_InitStructure.Pull = GPIO_NOPULL;
 		GPIO_InitStructure.Pin = ADXL362_INT2_PIN;
 		HAL_GPIO_Init(ADXL362_INT2_GPIO_PORT, &GPIO_InitStructure);
