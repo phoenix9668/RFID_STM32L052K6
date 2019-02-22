@@ -159,7 +159,6 @@ void DEBUG_USART_IRQHandler(void)
 void EXTI4_15_IRQHandler(void)
 {
   HAL_GPIO_EXTI_IRQHandler(ADXL362_INT1_PIN);
-//	printf("burst\n");
 }
 
 /**
@@ -168,6 +167,16 @@ void EXTI4_15_IRQHandler(void)
 void WWDG_IRQHandler(void)
 {
   HAL_WWDG_IRQHandler(&WwdgHandle);
+}
+
+/**
+  * @brief  This function handles the PVD Output interrupt request.
+  * @param  None
+  * @retval None
+  */
+void PVD_IRQHandler(void)
+{
+  HAL_PWR_PVD_IRQHandler();
 }
 
 /**

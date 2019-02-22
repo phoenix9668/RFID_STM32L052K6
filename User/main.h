@@ -40,11 +40,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32l0xx_hal.h"
 #include "./function/function.h"
-#include "./wwdg/bsp_wwdg.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
-#define	Time_Delay				0x3C				// cc1101重新初始化倒计时,10minutes
+#define	Time_Delay				0x78				// cc1101重新初始化倒计时,20minutes
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
 

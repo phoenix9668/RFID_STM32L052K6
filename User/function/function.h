@@ -7,6 +7,8 @@
 #include "./usart/bsp_debug_usart.h"
 #include "./spi/bsp_spi.h"
 #include "./adxl362/adxl362.h"
+#include "./wwdg/bsp_wwdg.h"
+#include "./pvd/bsp_pvd.h"
 
 /* Exported types ------------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -15,12 +17,10 @@
 #define TX              	0       	// cc1101发送模式
 #define RX              	1       	// cc1101接收模式
 #define IDLE          		2       	// cc1101空闲模式
-#define ACK_LENGTH      	60   		// 反馈数据包长度
-#define ACK_CNT				ACK_LENGTH/6-2	// floor(ACK_LENGTH/6)
-#define RECV_TIMEOUT			20   		// 接收等待2s
-#define SEND_LENGTH     	19			// 发送数据包长度
-#define SEND_PACKAGE_NUM	3				// 发生数据包数
-#define RECV_LENGTH   		18			// 接收数据包长度
+#define SEND_SLENGTH     	19				// 发送数据包长度
+#define SEND_LLENGTH     	61				// 发送数据包长度
+#define SEND_PACKAGE_NUM	3					// 发生数据包数
+#define RECV_LENGTH   		18				// 接收数据包长度
 /* Exported constants --------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */

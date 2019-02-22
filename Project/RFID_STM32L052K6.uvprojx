@@ -540,6 +540,11 @@
               <FileType>1</FileType>
               <FilePath>..\User\wwdg\bsp_wwdg.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_pvd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\pvd\bsp_pvd.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

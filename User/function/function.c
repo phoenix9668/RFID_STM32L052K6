@@ -4,7 +4,20 @@
 /* Private typedef -----------------------------------------------------------*/
 /* UART handler declared in "bsp_debug_usart.c" file */
 extern UART_HandleTypeDef UartHandle;
-extern __IO uint32_t step;
+extern __IO uint8_t step_stage;
+extern __IO uint32_t step1;
+extern __IO uint32_t step2;
+extern __IO uint32_t step3;
+extern __IO uint32_t step4;
+extern __IO uint32_t step5;
+extern __IO uint32_t step6;
+extern __IO uint32_t step7;
+extern __IO uint32_t step8;
+extern __IO uint32_t step9;
+extern __IO uint32_t step10;
+extern __IO uint32_t step11;
+extern __IO uint32_t step12;
+extern __IO uint8_t battery_low;
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -13,7 +26,7 @@ uint8_t	RSSI = 0;								// RSSI值
 uint8_t addr_eeprom;
 uint16_t sync_eeprom;
 uint32_t rfid_eeprom;
-uint8_t SendBuffer[SEND_LENGTH] = {0};// 发送数据包
+uint8_t SendBuffer[SEND_LLENGTH] = {0};// 发送数据包
 uint8_t RecvBuffer[RECV_LENGTH] = {0};// 接收数据包
 uint8_t aRxBuffer[RXBUFFERSIZE];			// Buffer used for reception
 /* Private function prototypes -----------------------------------------------*/
@@ -27,18 +40,20 @@ extern void Delay(__IO uint32_t nCount);
 void MCU_Initial(void)
 {
     GPIO_Config();
+		#ifdef DEBUG
 		if(ADC_IN1_READ() == 1)
 		{
-//		#ifdef DEBUG
 			Debug_USART_Config();
-//		#endif
 		}
+		#endif
 		Delay(0x100);
 		SPI_Config();
 		Delay(0x100);
 		ADXL362_Init();
 		Delay(0x100);
 		INT_GPIO_Config();
+		Delay(0x100);
+		PVD_Config();
 }
 
 /*===========================================================================
@@ -71,14 +86,14 @@ void System_Initial(void)
 		addr_eeprom = (uint8_t)(0xff & DATAEEPROM_Read(EEPROM_START_ADDR)>>16); 
 		sync_eeprom = (uint16_t)(0xffff & DATAEEPROM_Read(EEPROM_START_ADDR)); 
 		rfid_eeprom	= DATAEEPROM_Read(EEPROM_START_ADDR+4);
+		#ifdef DEBUG
 		if(ADC_IN1_READ() == 1)
 		{
-//		#ifdef DEBUG
 			printf("addr_eeprom = %x\n",addr_eeprom);
 			printf("sync_eeprom = %x\n",sync_eeprom);
 			printf("rfid_eeprom = %x\n",rfid_eeprom);
-//		#endif
 		}
+		#endif
     RF_Initial(addr_eeprom, sync_eeprom, IDLE);     // 初始化无线芯片，空闲模式
 		#ifdef UART_PROG
 		/*##-3- Put UART peripheral in reception process ###########################*/
@@ -102,12 +117,12 @@ uint8_t RF_RecvHandler(void)
 		{
 			HAL_NVIC_DisableIRQ(EXTI4_15_IRQn);
 //			__disable_irq();
+			#ifdef DEBUG
 			if(ADC_IN1_READ() == 1)
 			{
-//				#ifdef DEBUG
 				printf("interrupt occur\n");
-//				#endif
 			}
+			#endif
 			timeout = Delay_TimeOut;
 			while (CC1101_IRQ_READ() == 0 && timeout != 0)
 			{
@@ -116,63 +131,65 @@ uint8_t RF_RecvHandler(void)
 			for (i=0; i<RECV_LENGTH; i++)   { RecvBuffer[i] = 0; } // clear array
 			length = CC1101RecPacket(RecvBuffer, &Chip_Addr, &RSSI);	// 读取接收到的数据长度和数据内容
 			
+			#ifdef DEBUG
 			if(ADC_IN1_READ() == 1)
 			{
-//				#ifdef DEBUG
 				rssi_dBm = CC1101CalcRSSI_dBm(RSSI);
 				printf("RSSI = %ddBm, length = %d, address = %d\n",rssi_dBm,length,Chip_Addr);
 				for(i=0; i<RECV_LENGTH; i++)
 				{	
 					printf("%x ",RecvBuffer[i]);
 				}
-//				#endif
 			}
+			#endif
 			if(length == 0)
 				{
+					#ifdef DEBUG
 					if(ADC_IN1_READ() == 1)
 					{
-//						#ifdef DEBUG
 						printf("receive error or Address Filtering fail\n");
-//						#endif
 					}
-					return 1;
+					#endif
+					return 0x01;
 				}
 			else
 				{
 					if(RecvBuffer[0] == 0xAB && RecvBuffer[1] == 0xCD)
 					{
 						if(RecvBuffer[4] == 0xC0 && RecvBuffer[5] == 0xC0)
-						{return 4;}
+						{return 0x04;}
+						else if(RecvBuffer[4] == 0xC2 && RecvBuffer[5] == 0xC2)
+						{return 0x05;}
 						else if(RecvBuffer[4] == 0xC3 && RecvBuffer[5] == 0xC3)
-						{return 5;}
+						{return 0x06;}
 						else if(RecvBuffer[4] == 0xC4 && RecvBuffer[5] == 0xC4)
-						{return 6;}
+						{return 0x07;}
 						else if(RecvBuffer[4] == 0xC5 && RecvBuffer[5] == 0xC5)
-						{return 7;}
+						{return 0x08;}
 						else if(RecvBuffer[4] == 0xC6 && RecvBuffer[5] == 0xC6)
-						{return 8;}
+						{return 0x09;}
 						else
 						{	
+							#ifdef DEBUG
 							if(ADC_IN1_READ() == 1)
 							{
-//							#ifdef DEBUG
 								printf("receive function order error\r\n");
-//							#endif
 							}
-							return 3;}
+							#endif
+							return 0x03;}
 					}
 					else
 					{
+						#ifdef DEBUG
 						if(ADC_IN1_READ() == 1)
 						{
-//						#ifdef DEBUG
 							printf("receive package beginning error\r\n");
-//						#endif
 						}
-						return 2;}
+						#endif
+						return 0x02;}
 				}
 		}
-	else	{return 0;}
+	else	{return 0x00;}
 }
 
 /*===========================================================================
@@ -188,22 +205,126 @@ void RF_SendPacket(uint8_t index)
 	
 	LED_GREEN_OFF();
 	
-	if(index == 4)
+	switch(index)
 	{
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = RecvBuffer[2];
-		SendBuffer[3] = RecvBuffer[3];
-		SendBuffer[4] = 0xD0;
-		SendBuffer[5] = 0x01;
-		SendBuffer[6] = RecvBuffer[6];
-		SendBuffer[7] = RecvBuffer[7];
-		SendBuffer[8] = RecvBuffer[8];
-		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[10] = (uint8_t)(0x000000FF & step>>24);
-		SendBuffer[11] = (uint8_t)(0x000000FF & step>>16);
-		SendBuffer[12] = (uint8_t)(0x000000FF & step>>8);
-		SendBuffer[13] = (uint8_t)(0x000000FF & step);
+		case 0x01://receive error or Address Filtering fail
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];
+			SendBuffer[4] = 0x01;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[10] = 0xE0;
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		case 0x02://receive package beginning error
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0x02;
+			SendBuffer[5] = 0x02;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[10] = 0xE1;
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		case 0x03://receive function order error
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0x03;
+			SendBuffer[5] = 0x03;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[10] = 0xE2;
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		case 0x04:
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];
+			SendBuffer[4] = 0xD0;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[10] = (uint8_t)(0x000000FF & step1>>24);
+			SendBuffer[11] = (uint8_t)(0x000000FF & step1>>16);
+			SendBuffer[12] = (uint8_t)(0x000000FF & step1>>8);
+			SendBuffer[13] = (uint8_t)(0x000000FF & step1);
+			SendBuffer[14] = (uint8_t)(0x000000FF & step2>>24);
+			SendBuffer[15] = (uint8_t)(0x000000FF & step2>>16);
+			SendBuffer[16] = (uint8_t)(0x000000FF & step2>>8);
+			SendBuffer[17] = (uint8_t)(0x000000FF & step2);
+			SendBuffer[18] = (uint8_t)(0x000000FF & step3>>24);
+			SendBuffer[19] = (uint8_t)(0x000000FF & step3>>16);
+			SendBuffer[20] = (uint8_t)(0x000000FF & step3>>8);
+			SendBuffer[21] = (uint8_t)(0x000000FF & step3);
+			SendBuffer[22] = (uint8_t)(0x000000FF & step4>>24);
+			SendBuffer[23] = (uint8_t)(0x000000FF & step4>>16);
+			SendBuffer[24] = (uint8_t)(0x000000FF & step4>>8);
+			SendBuffer[25] = (uint8_t)(0x000000FF & step4);
+			SendBuffer[26] = (uint8_t)(0x000000FF & step5>>24);
+			SendBuffer[27] = (uint8_t)(0x000000FF & step5>>16);
+			SendBuffer[28] = (uint8_t)(0x000000FF & step5>>8);
+			SendBuffer[29] = (uint8_t)(0x000000FF & step5);
+			SendBuffer[30] = (uint8_t)(0x000000FF & step6>>24);
+			SendBuffer[31] = (uint8_t)(0x000000FF & step6>>16);
+			SendBuffer[32] = (uint8_t)(0x000000FF & step6>>8);
+			SendBuffer[33] = (uint8_t)(0x000000FF & step6);
+			SendBuffer[34] = (uint8_t)(0x000000FF & step7>>24);
+			SendBuffer[35] = (uint8_t)(0x000000FF & step7>>16);
+			SendBuffer[36] = (uint8_t)(0x000000FF & step7>>8);
+			SendBuffer[37] = (uint8_t)(0x000000FF & step7);
+			SendBuffer[38] = (uint8_t)(0x000000FF & step8>>24);
+			SendBuffer[39] = (uint8_t)(0x000000FF & step8>>16);
+			SendBuffer[40] = (uint8_t)(0x000000FF & step8>>8);
+			SendBuffer[41] = (uint8_t)(0x000000FF & step8);
+			SendBuffer[42] = (uint8_t)(0x000000FF & step9>>24);
+			SendBuffer[43] = (uint8_t)(0x000000FF & step9>>16);
+			SendBuffer[44] = (uint8_t)(0x000000FF & step9>>8);
+			SendBuffer[45] = (uint8_t)(0x000000FF & step9);
+			SendBuffer[46] = (uint8_t)(0x000000FF & step10>>24);
+			SendBuffer[47] = (uint8_t)(0x000000FF & step10>>16);
+			SendBuffer[48] = (uint8_t)(0x000000FF & step10>>8);
+			SendBuffer[49] = (uint8_t)(0x000000FF & step10);
+			SendBuffer[50] = (uint8_t)(0x000000FF & step11>>24);
+			SendBuffer[51] = (uint8_t)(0x000000FF & step11>>16);
+			SendBuffer[52] = (uint8_t)(0x000000FF & step11>>8);
+			SendBuffer[53] = (uint8_t)(0x000000FF & step11);
+			SendBuffer[54] = (uint8_t)(0x000000FF & step12>>24);
+			SendBuffer[55] = (uint8_t)(0x000000FF & step12>>16);
+			SendBuffer[56] = (uint8_t)(0x000000FF & step12>>8);
+			SendBuffer[57] = (uint8_t)(0x000000FF & step12);
+			SendBuffer[58] = step_stage;
+			SendBuffer[59] = battery_low;
 //		for(i=10; i<SEND_LENGTH; i++)
 //		{
 //			SendBuffer[i] = i-10;
@@ -213,167 +334,200 @@ void RF_SendPacket(uint8_t index)
 //		{
 //			printf("%x ",SendBuffer[i]);
 //		}
-		SendBuffer[18] = RSSI;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			Delay(0x500);
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
-		}
-	}
-	else if(index == 5)
-	{
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = RecvBuffer[2];
-		SendBuffer[3] = RecvBuffer[3];		
-		SendBuffer[4] = 0xD3;
-		SendBuffer[5] = 0x01;
-		SendBuffer[6] = RecvBuffer[6];
-		SendBuffer[7] = RecvBuffer[7];
-		SendBuffer[8] = RecvBuffer[8];
-		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[18] = RSSI;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			Delay(0x500);
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
-		}
-	}
-	else if(index == 6)
-	{
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = RecvBuffer[2];
-		SendBuffer[3] = RecvBuffer[3];		
-		SendBuffer[4] = 0xD4;
-		SendBuffer[5] = 0x01;
-		SendBuffer[6] = RecvBuffer[6];
-		SendBuffer[7] = RecvBuffer[7];
-		SendBuffer[8] = RecvBuffer[8];
-		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[10] = (uint8_t)(0x000000FF & step>>24);
-		SendBuffer[11] = (uint8_t)(0x000000FF & step>>16);
-		SendBuffer[12] = (uint8_t)(0x000000FF & step>>8);
-		SendBuffer[13] = (uint8_t)(0x000000FF & step);
-		SendBuffer[18] = RSSI;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			Delay(0x500);
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
-		}
-	}
-	else if(index == 7)
-	{
-		data = ((uint32_t)(0xFF000000 & RecvBuffer[10]<<24)+(uint32_t)(0x00FF0000 & RecvBuffer[11]<<16)+(uint32_t)(0x0000FF00 & RecvBuffer[12]<<8)+(uint32_t)(0x000000FF & RecvBuffer[13]));
-		DATAEEPROM_Program(EEPROM_START_ADDR, data);
-		data = ((uint32_t)(0xFF000000 & RecvBuffer[14]<<24)+(uint32_t)(0x00FF0000 & RecvBuffer[15]<<16)+(uint32_t)(0x0000FF00 & RecvBuffer[16]<<8)+(uint32_t)(0x000000FF & RecvBuffer[17]));
-		DATAEEPROM_Program(EEPROM_START_ADDR+4, data);
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = RecvBuffer[2];
-		SendBuffer[3] = RecvBuffer[3];		
-		SendBuffer[4] = 0xD5;
-		SendBuffer[5] = 0x01;
-		SendBuffer[6] = RecvBuffer[6];
-		SendBuffer[7] = RecvBuffer[7];
-		SendBuffer[8] = RecvBuffer[8];
-		SendBuffer[9] = RecvBuffer[9];
-		dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR);
-		SendBuffer[10] = (uint8_t)(0x000000FF & dataeeprom>>24);
-		SendBuffer[11] = (uint8_t)(0x000000FF & dataeeprom>>16);
-		SendBuffer[12] = (uint8_t)(0x000000FF & dataeeprom>>8);
-		SendBuffer[13] = (uint8_t)(0x000000FF & dataeeprom);
-		dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR+4);
-		SendBuffer[14] = (uint8_t)(0x000000FF & dataeeprom>>24);
-		SendBuffer[15] = (uint8_t)(0x000000FF & dataeeprom>>16);
-		SendBuffer[16] = (uint8_t)(0x000000FF & dataeeprom>>8);
-		SendBuffer[17] = (uint8_t)(0x000000FF & dataeeprom);	
-		SendBuffer[18] = RSSI;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			Delay(0x500);
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
-		}
-	}
-	else if(index == 8)
-	{
-		step = 0;
-		SendBuffer[0] = 0xAB;
-		SendBuffer[1] = 0xCD;
-		SendBuffer[2] = RecvBuffer[2];
-		SendBuffer[3] = RecvBuffer[3];		
-		SendBuffer[4] = 0xD6;
-		SendBuffer[5] = 0x01;
-		SendBuffer[6] = RecvBuffer[6];
-		SendBuffer[7] = RecvBuffer[7];
-		SendBuffer[8] = RecvBuffer[8];
-		SendBuffer[9] = RecvBuffer[9];
-		SendBuffer[18] = RSSI;
-		for(i=0; i<SEND_PACKAGE_NUM; i++)
-		{
-			Delay(0x500);
-			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);
-		}
-	}
-//	else if(index == 1)
-//	{
-//		SendBuffer[0] = 0xAB;
-//		SendBuffer[1] = 0xCD;
-//		SendBuffer[2] = 0x01;
-//		SendBuffer[3] = 0x01;
-//		SendBuffer[4] = RecvBuffer[6];
-//		SendBuffer[5] = RecvBuffer[7];
-//		SendBuffer[6] = RecvBuffer[8];
-//		SendBuffer[7] = RecvBuffer[9];
-//		SendBuffer[14] = 0x01;
-//		for(i=0; i<SEND_PACKAGE_NUM; i++)
-//		{
-//			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-//			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
-////		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
-//		}
-//	}
-//	else if(index == 2)
-//	{
-//		SendBuffer[0] = 0xAB;
-//		SendBuffer[1] = 0xCD;
-//		SendBuffer[2] = 0x02;
-//		SendBuffer[3] = 0x02;
-//		SendBuffer[4] = RecvBuffer[6];
-//		SendBuffer[5] = RecvBuffer[7];
-//		SendBuffer[6] = RecvBuffer[8];
-//		SendBuffer[7] = RecvBuffer[9];
-//		SendBuffer[14] = 0x02;
-//		for(i=0; i<SEND_PACKAGE_NUM; i++)
-//		{
-//			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-//			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
-////		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
-//		}
-//	}
-//	else if(index == 3)
-//	{
-//		SendBuffer[0] = 0xAB;
-//		SendBuffer[1] = 0xCD;
-//		SendBuffer[2] = 0x03;
-//		SendBuffer[3] = 0x03;
-//		SendBuffer[4] = RecvBuffer[6];
-//		SendBuffer[5] = RecvBuffer[7];
-//		SendBuffer[6] = RecvBuffer[8];
-//		SendBuffer[7] = RecvBuffer[9];
-//		SendBuffer[14] = 0x03;
-//		for(i=0; i<SEND_PACKAGE_NUM; i++)
-//		{
-//			CC1101SendPacket(SendBuffer, SEND_LENGTH, ADDRESS_CHECK);    // 发送数据
-//			Delay(0xFFFF);									// 计算得到平均27ms发送一次数据
-////		Delay(0xFFFFF);									// 计算得到平均130ms发送一次数据
-//		}
-//	}
+			SendBuffer[60] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_LLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		case 0x05:
+			battery_low = 0x00;
+			DATAEEPROM_Program(EEPROM_START_ADDR+112, battery_low);
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0xD2;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			battery_low = (uint8_t)(0x000000FF & DATAEEPROM_Read(EEPROM_START_ADDR+112));
+			SendBuffer[10] = battery_low;
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;	
+		case 0x06:
+			ADXL362_ReInit(RecvBuffer[10], RecvBuffer[11], RecvBuffer[13], RecvBuffer[14], RecvBuffer[15], RecvBuffer[16], RecvBuffer[17]);
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0xD3;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[10] = ADXL362RegisterRead(XL362_THRESH_ACT_H);
+			SendBuffer[11] = ADXL362RegisterRead(XL362_THRESH_ACT_L);
+			SendBuffer[12] = ADXL362RegisterRead(XL362_TIME_ACT);
+			SendBuffer[13] = ADXL362RegisterRead(XL362_THRESH_INACT_H);
+			SendBuffer[14] = ADXL362RegisterRead(XL362_THRESH_INACT_L);
+			SendBuffer[15] = ADXL362RegisterRead(XL362_TIME_INACT_H);
+			SendBuffer[16] = ADXL362RegisterRead(XL362_TIME_INACT_L);
+			SendBuffer[17] = ADXL362RegisterRead(XL362_FILTER_CTL);
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;
 
-	for(i=0; i<SEND_LENGTH; i++) // clear array
+		case 0x07:
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0xD4;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[10] = (uint8_t)(0x000000FF & step1>>24);
+			SendBuffer[11] = (uint8_t)(0x000000FF & step1>>16);
+			SendBuffer[12] = (uint8_t)(0x000000FF & step1>>8);
+			SendBuffer[13] = (uint8_t)(0x000000FF & step1);
+			SendBuffer[14] = (uint8_t)(0x000000FF & step2>>24);
+			SendBuffer[15] = (uint8_t)(0x000000FF & step2>>16);
+			SendBuffer[16] = (uint8_t)(0x000000FF & step2>>8);
+			SendBuffer[17] = (uint8_t)(0x000000FF & step2);
+			SendBuffer[18] = (uint8_t)(0x000000FF & step3>>24);
+			SendBuffer[19] = (uint8_t)(0x000000FF & step3>>16);
+			SendBuffer[20] = (uint8_t)(0x000000FF & step3>>8);
+			SendBuffer[21] = (uint8_t)(0x000000FF & step3);
+			SendBuffer[22] = (uint8_t)(0x000000FF & step4>>24);
+			SendBuffer[23] = (uint8_t)(0x000000FF & step4>>16);
+			SendBuffer[24] = (uint8_t)(0x000000FF & step4>>8);
+			SendBuffer[25] = (uint8_t)(0x000000FF & step4);
+			SendBuffer[26] = (uint8_t)(0x000000FF & step5>>24);
+			SendBuffer[27] = (uint8_t)(0x000000FF & step5>>16);
+			SendBuffer[28] = (uint8_t)(0x000000FF & step5>>8);
+			SendBuffer[29] = (uint8_t)(0x000000FF & step5);
+			SendBuffer[30] = (uint8_t)(0x000000FF & step6>>24);
+			SendBuffer[31] = (uint8_t)(0x000000FF & step6>>16);
+			SendBuffer[32] = (uint8_t)(0x000000FF & step6>>8);
+			SendBuffer[33] = (uint8_t)(0x000000FF & step6);
+			SendBuffer[34] = (uint8_t)(0x000000FF & step7>>24);
+			SendBuffer[35] = (uint8_t)(0x000000FF & step7>>16);
+			SendBuffer[36] = (uint8_t)(0x000000FF & step7>>8);
+			SendBuffer[37] = (uint8_t)(0x000000FF & step7);
+			SendBuffer[38] = (uint8_t)(0x000000FF & step8>>24);
+			SendBuffer[39] = (uint8_t)(0x000000FF & step8>>16);
+			SendBuffer[40] = (uint8_t)(0x000000FF & step8>>8);
+			SendBuffer[41] = (uint8_t)(0x000000FF & step8);
+			SendBuffer[42] = (uint8_t)(0x000000FF & step9>>24);
+			SendBuffer[43] = (uint8_t)(0x000000FF & step9>>16);
+			SendBuffer[44] = (uint8_t)(0x000000FF & step9>>8);
+			SendBuffer[45] = (uint8_t)(0x000000FF & step9);
+			SendBuffer[46] = (uint8_t)(0x000000FF & step10>>24);
+			SendBuffer[47] = (uint8_t)(0x000000FF & step10>>16);
+			SendBuffer[48] = (uint8_t)(0x000000FF & step10>>8);
+			SendBuffer[49] = (uint8_t)(0x000000FF & step10);
+			SendBuffer[50] = (uint8_t)(0x000000FF & step11>>24);
+			SendBuffer[51] = (uint8_t)(0x000000FF & step11>>16);
+			SendBuffer[52] = (uint8_t)(0x000000FF & step11>>8);
+			SendBuffer[53] = (uint8_t)(0x000000FF & step11);
+			SendBuffer[54] = (uint8_t)(0x000000FF & step12>>24);
+			SendBuffer[55] = (uint8_t)(0x000000FF & step12>>16);
+			SendBuffer[56] = (uint8_t)(0x000000FF & step12>>8);
+			SendBuffer[57] = (uint8_t)(0x000000FF & step12);
+			SendBuffer[58] = step_stage;
+			SendBuffer[59] = battery_low;
+			SendBuffer[60] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_LLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		case 0x08:
+			data = ((uint32_t)(0xFF000000 & RecvBuffer[10]<<24)+(uint32_t)(0x00FF0000 & RecvBuffer[11]<<16)+(uint32_t)(0x0000FF00 & RecvBuffer[12]<<8)+(uint32_t)(0x000000FF & RecvBuffer[13]));
+			DATAEEPROM_Program(EEPROM_START_ADDR, data);
+			data = ((uint32_t)(0xFF000000 & RecvBuffer[14]<<24)+(uint32_t)(0x00FF0000 & RecvBuffer[15]<<16)+(uint32_t)(0x0000FF00 & RecvBuffer[16]<<8)+(uint32_t)(0x000000FF & RecvBuffer[17]));
+			DATAEEPROM_Program(EEPROM_START_ADDR+4, data);
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0xD5;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR);
+			SendBuffer[10] = (uint8_t)(0x000000FF & dataeeprom>>24);
+			SendBuffer[11] = (uint8_t)(0x000000FF & dataeeprom>>16);
+			SendBuffer[12] = (uint8_t)(0x000000FF & dataeeprom>>8);
+			SendBuffer[13] = (uint8_t)(0x000000FF & dataeeprom);
+			dataeeprom = DATAEEPROM_Read(EEPROM_START_ADDR+4);
+			SendBuffer[14] = (uint8_t)(0x000000FF & dataeeprom>>24);
+			SendBuffer[15] = (uint8_t)(0x000000FF & dataeeprom>>16);
+			SendBuffer[16] = (uint8_t)(0x000000FF & dataeeprom>>8);
+			SendBuffer[17] = (uint8_t)(0x000000FF & dataeeprom);	
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		case 0x09:
+			step1 = 0;
+			step2 = 0;
+			step3 = 0;
+			step4 = 0;
+			step5 = 0;
+			step6 = 0;
+			step7 = 0;
+			step8 = 0;
+			step9 = 0;
+			step10 = 0;
+			step11 = 0;
+			step12 = 0;
+			step_stage = 0;
+			SendBuffer[0] = 0xAB;
+			SendBuffer[1] = 0xCD;
+			SendBuffer[2] = RecvBuffer[2];
+			SendBuffer[3] = RecvBuffer[3];		
+			SendBuffer[4] = 0xD6;
+			SendBuffer[5] = 0x01;
+			SendBuffer[6] = RecvBuffer[6];
+			SendBuffer[7] = RecvBuffer[7];
+			SendBuffer[8] = RecvBuffer[8];
+			SendBuffer[9] = RecvBuffer[9];
+			SendBuffer[18] = RSSI;
+			for(i=0; i<SEND_PACKAGE_NUM; i++)
+			{
+				Delay(0x500);
+				CC1101SendPacket(SendBuffer, SEND_SLENGTH, ADDRESS_CHECK);
+			}
+			break;
+		default : break;
+	}
+
+	for(i=0; i<SEND_LLENGTH; i++) // clear array
 	{SendBuffer[i] = 0;}
 
-//	RF_Initial(addr_eeprom, sync_eeprom, IDLE);
 	CC1101SetIdle();
 	CC1101WORInit();
 	CC1101SetWORMode();

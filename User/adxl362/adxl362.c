@@ -165,3 +165,31 @@ void ADXL362_Init(void)
 		Delay(200);
 }
 
+/*******************************************************************
+  @brief void ADXL362_ReInit(void)
+         reinitial and configure ADXL362
+  @param
+				 none
+  @return
+         none
+*******************************************************************/
+void ADXL362_ReInit(uint8_t thresh_act_h, uint8_t thresh_act_l, uint8_t thresh_inact_h, uint8_t thresh_inact_l, uint8_t time_inact_h, uint8_t time_inact_l, uint8_t filter_ctl)
+{
+		ADXL362RegisterWrite(XL362_SOFT_RESET,0x52);   						// software reset
+		Delay(2000);
+		ADXL362RegisterWrite(XL362_THRESH_ACT_L,thresh_act_l);						//set active threshold equip 350mg
+		ADXL362RegisterWrite(XL362_THRESH_ACT_H,thresh_act_h);
+		ADXL362RegisterWrite(XL362_THRESH_INACT_L,thresh_inact_l);					//set inactive threshold equip 150mg
+		ADXL362RegisterWrite(XL362_THRESH_INACT_H,thresh_inact_h);
+		ADXL362RegisterWrite(XL362_TIME_INACT_L,time_inact_l);						//set inactive time equip 1/12.5s
+		ADXL362RegisterWrite(XL362_TIME_INACT_H,time_inact_h);
+		ADXL362RegisterWrite(XL362_ACT_INACT_CTL,0x3F);						//configure loop mode,enable active and inactive
+		ADXL362RegisterWrite(XL362_INTMAP1,0x40);									//configure awake map INT1
+		ADXL362RegisterWrite(XL362_INTMAP2,0x00);									//configure awake map INT2
+		ADXL362RegisterWrite(XL362_FIFO_CONTROL,0x00);						//select fifo stream mode//0x0E
+		ADXL362RegisterWrite(XL362_FIFO_SAMPLES,0x00);						//select fifo sample number//0xFF
+		ADXL362RegisterWrite(XL362_FILTER_CTL,filter_ctl);             	//select 2g range,ODR:12.5Hz
+    //any changes to the registers before the POWER_CTL register (Register 0x00 to Register 0x2C) should be made with the device in standby
+    ADXL362RegisterWrite(XL362_POWER_CTL,0x0A);              	//select measurement mode
+		Delay(200);
+}

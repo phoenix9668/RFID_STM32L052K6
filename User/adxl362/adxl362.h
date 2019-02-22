@@ -9,6 +9,8 @@
 
  Hardware plateform : 	EVAL-ADuCM360MKZ and EVAL-ADXL362Z 
 ********************************************************************************/
+
+#include "stm32l0xx.h"
 #ifndef _ADXL362DRIVER_H_
 #define _ADXL362DRIVER_H_  
 
@@ -55,5 +57,6 @@ void  ADXL362BurstRead(unsigned char Address, unsigned char NumberofRegisters, u
 void  ADXL362BurstWrite(unsigned char Address, unsigned char NumberofRegisters, unsigned char *RegisterData);
 void 	ADXL362FifoRead(unsigned int NumberofRegisters, unsigned char *RegisterData);
 void	ADXL362_Init(void);
+void	ADXL362_ReInit(uint8_t thresh_act_h, uint8_t thresh_act_l, uint8_t thresh_inact_h, uint8_t thresh_inact_l, uint8_t time_inact_h, uint8_t time_inact_l, uint8_t filter_ctl);
 
 #endif

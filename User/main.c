@@ -46,12 +46,25 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
-uint8_t index = 0x0;
 unsigned char Temp;
+uint8_t rx_index = 0x0;
+__IO uint8_t step_stage;
 __IO uint16_t timedelay;
 __IO uint8_t wwdg_time;
 __IO uint8_t wwdg_flag;
-__IO uint32_t step;
+__IO uint32_t step1;
+__IO uint32_t step2;
+__IO uint32_t step3;
+__IO uint32_t step4;
+__IO uint32_t step5;
+__IO uint32_t step6;
+__IO uint32_t step7;
+__IO uint32_t step8;
+__IO uint32_t step9;
+__IO uint32_t step10;
+__IO uint32_t step11;
+__IO uint32_t step12;
+__IO uint8_t battery_low;
 uint32_t sysclockfreq;
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -120,35 +133,69 @@ int main(void)
 
 	wwdg_time = 0x3;
 	timedelay = Time_Delay;
-	step = DATAEEPROM_Read(EEPROM_START_ADDR+8);
+	step1 = DATAEEPROM_Read(EEPROM_START_ADDR+8);
 	DATAEEPROM_Program(EEPROM_START_ADDR+8, 0x0);
+	step2 = DATAEEPROM_Read(EEPROM_START_ADDR+16);
+	DATAEEPROM_Program(EEPROM_START_ADDR+16, 0x0);
+	step3 = DATAEEPROM_Read(EEPROM_START_ADDR+24);
+	DATAEEPROM_Program(EEPROM_START_ADDR+24, 0x0);
+	step4 = DATAEEPROM_Read(EEPROM_START_ADDR+32);
+	DATAEEPROM_Program(EEPROM_START_ADDR+32, 0x0);	
+	step5 = DATAEEPROM_Read(EEPROM_START_ADDR+40);
+	DATAEEPROM_Program(EEPROM_START_ADDR+40, 0x0);
+	step6 = DATAEEPROM_Read(EEPROM_START_ADDR+48);
+	DATAEEPROM_Program(EEPROM_START_ADDR+48, 0x0);
+	step7 = DATAEEPROM_Read(EEPROM_START_ADDR+56);
+	DATAEEPROM_Program(EEPROM_START_ADDR+56, 0x0);
+	step8 = DATAEEPROM_Read(EEPROM_START_ADDR+64);
+	DATAEEPROM_Program(EEPROM_START_ADDR+64, 0x0);
+	step9 = DATAEEPROM_Read(EEPROM_START_ADDR+72);
+	DATAEEPROM_Program(EEPROM_START_ADDR+72, 0x0);
+	step10 = DATAEEPROM_Read(EEPROM_START_ADDR+80);
+	DATAEEPROM_Program(EEPROM_START_ADDR+80, 0x0);
+	step11 = DATAEEPROM_Read(EEPROM_START_ADDR+88);
+	DATAEEPROM_Program(EEPROM_START_ADDR+88, 0x0);
+	step12 = DATAEEPROM_Read(EEPROM_START_ADDR+96);
+	DATAEEPROM_Program(EEPROM_START_ADDR+96, 0x0);
+	step_stage = (uint8_t)(0x000000FF & DATAEEPROM_Read(EEPROM_START_ADDR+104));
+	DATAEEPROM_Program(EEPROM_START_ADDR+104, 0x0);
+	battery_low = (uint8_t)(0x000000FF & DATAEEPROM_Read(EEPROM_START_ADDR+112));
+	DATAEEPROM_Program(EEPROM_START_ADDR+112, 0x0);
 
 	while(1)
 		{
-			index = RF_RecvHandler();
-			if(index != 0x0)   // 无线数据接收处理
+			rx_index = RF_RecvHandler();
+			if(rx_index != 0x0)   // 无线数据接收处理
 			{
-				RF_SendPacket(index);
+				RF_SendPacket(rx_index);
 			}
 			if(wwdg_time == 0x0)
 			{
+				#ifdef DEBUG
 				if(ADC_IN1_READ() == 1)
 				{
 					printf("timedelay_1 = %d\n",timedelay);
 					printf("wwdg_time_1 = %d\n",wwdg_time);
 				}
+				#endif
 				WWDG_Refresh();
 				wwdg_time = 0x3;
 			}
 			if(timedelay == 0x0)
 			{
+				#ifdef DEBUG
 				if(ADC_IN1_READ() == 1)
 				{
 					printf("timedelay_2 = %d\n",timedelay);
 					printf("wwdg_time_2 = %d\n",wwdg_time);
 				}
-				RF_Initial(addr_eeprom, sync_eeprom, IDLE);
+				#endif
 				timedelay = Time_Delay;
+				step_stage++;
+				if(step_stage%3 == 0)
+				{
+					RF_Initial(addr_eeprom, sync_eeprom, IDLE);
+				}
 			}
 			wwdg_flag = 0x1;
 		}
@@ -182,12 +229,12 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 		uint8_t uart_addr_eeprom;// 从eeprom中读出的数
 		uint16_t uart_sync_eeprom;
 		uint32_t uart_rfid_eeprom;
+		#ifdef DEBUG
 		if(ADC_IN1_READ() == 1)
 		{
-//		#ifdef DEBUG
-		printf("data = %x %x %x %x %x %x %x %x %x %x %x %x \n",aRxBuffer[0],aRxBuffer[1],aRxBuffer[2],aRxBuffer[3],aRxBuffer[4],aRxBuffer[5],aRxBuffer[6],aRxBuffer[7],aRxBuffer[8],aRxBuffer[9],aRxBuffer[10],aRxBuffer[11]);
-//		#endif
+			printf("data = %x %x %x %x %x %x %x %x %x %x %x %x \n",aRxBuffer[0],aRxBuffer[1],aRxBuffer[2],aRxBuffer[3],aRxBuffer[4],aRxBuffer[5],aRxBuffer[6],aRxBuffer[7],aRxBuffer[8],aRxBuffer[9],aRxBuffer[10],aRxBuffer[11]);
 		}
+		#endif
 		/*##-1- Check UART receive data whether is ‘ABCD’ begin or not ###########################*/
 		if(aRxBuffer[0] == 0x41 && aRxBuffer[1] == 0x42 && aRxBuffer[2] == 0x43 && aRxBuffer[3] == 0x44)//输入‘ABCD’
 			{
@@ -198,15 +245,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 				uart_addr_eeprom = (uint8_t)(0xff & DATAEEPROM_Read(EEPROM_START_ADDR)>>16);
 				uart_sync_eeprom = (uint16_t)(0xffff & DATAEEPROM_Read(EEPROM_START_ADDR));
 				uart_rfid_eeprom	= DATAEEPROM_Read(EEPROM_START_ADDR+4);
+				#ifdef DEBUG
 				if(ADC_IN1_READ() == 1)
 				{
-//				#ifdef DEBUG
 					printf("eeprom program end\n");
 					printf("addr_eeprom = %x\n",uart_addr_eeprom);
 					printf("sync_eeprom = %x\n",uart_sync_eeprom);
 					printf("rfid_eeprom = %x\n",uart_rfid_eeprom);
-//				#endif
 				}
+				#endif
 			}
 }
 
@@ -235,24 +282,48 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if(GPIO_Pin == ADXL362_INT1_PIN)
   {
-//		LED_GREEN_TOG();
-		step++;
+		switch(step_stage)
+		{
+			case 0x0: step1++;break;
+			case 0x1: step2++;break;
+			case 0x2: step3++;break;
+			case 0x3: step4++;break;
+			case 0x4: step5++;break;
+			case 0x5: step6++;break;
+			case 0x6: step7++;break;
+			case 0x7: step8++;break;
+			case 0x8: step9++;break;
+			case 0x9: step10++;break;
+			case 0x10: step11++;break;
+			default: step12++;
+		}
 //		if(CC1101_GDO2_READ() == 0)//WOR状态被中断打断
 //		{
 //			while (CC1101_GDO2_READ() == 0);
 //			LED5_Red_TOG();
 //		}
 
+		#ifdef DEBUG
 		if(ADC_IN1_READ() == 1)
 		{
-//		#ifdef DEBUG
 			Temp = ADXL362RegisterRead(XL362_STATUS);
 			printf("Status is %x\n",Temp);
-			printf("Step is %d\n",step);
+			printf("Step1 is %d\n",step1);
+			printf("Step2 is %d\n",step2);
+			printf("Step3 is %d\n",step3);
+			printf("Step4 is %d\n",step4);
+			printf("Step5 is %d\n",step5);
+			printf("Step6 is %d\n",step6);
+			printf("Step7 is %d\n",step7);
+			printf("Step8 is %d\n",step8);
+			printf("Step9 is %d\n",step9);
+			printf("Step10 is %d\n",step10);
+			printf("Step11 is %d\n",step11);
+			printf("Step12 is %d\n",step12);
 //			Temp = CC1101ReadStatus(CC1101_MARCSTATE);
 //			printf("CC1101_MARCSTATE is %d\n",Temp);
-//		#endif
 		}
+		#endif
   }
 }
 
@@ -274,6 +345,17 @@ void HAL_SysTick_Decrement(void)
 }
 
 /**
+  * @brief  PWR PVD interrupt callback
+  * @param  none 
+  * @retval none
+  */
+void HAL_PWR_PVDCallback(void)
+{
+	battery_low = 0x01;
+	DATAEEPROM_Program(EEPROM_START_ADDR+112, battery_low);
+}
+
+/**
   * @brief  WWDG Early Wakeup callback.
   * @param  hwwdg  pointer to a WWDG_HandleTypeDef structure that contains
   *                the configuration information for the specified WWDG module.
@@ -284,16 +366,29 @@ void HAL_WWDG_EarlyWakeupCallback(WWDG_HandleTypeDef* hwwdg)
 	if(wwdg_flag == 0x1)
 	{
 		WWDG_Refresh();
+		#ifdef DEBUG
 		if(ADC_IN1_READ() == 1)
 		{
 			printf("EarlyWakeupCallback\n");
 			printf("wwdg_time = %d\n",wwdg_time);
 			printf("wwdg_flag = %d\n",wwdg_flag);
 		}
+		#endif
 		wwdg_time = 0x3;
 		wwdg_flag = 0x0;
 	}
-	DATAEEPROM_Program(EEPROM_START_ADDR+8, step);
+	DATAEEPROM_Program(EEPROM_START_ADDR+8, step1);
+	DATAEEPROM_Program(EEPROM_START_ADDR+16, step2);
+	DATAEEPROM_Program(EEPROM_START_ADDR+24, step3);
+	DATAEEPROM_Program(EEPROM_START_ADDR+32, step4);
+	DATAEEPROM_Program(EEPROM_START_ADDR+40, step5);
+	DATAEEPROM_Program(EEPROM_START_ADDR+48, step6);
+	DATAEEPROM_Program(EEPROM_START_ADDR+56, step7);
+	DATAEEPROM_Program(EEPROM_START_ADDR+64, step8);
+	DATAEEPROM_Program(EEPROM_START_ADDR+72, step9);
+	DATAEEPROM_Program(EEPROM_START_ADDR+80, step10);
+	DATAEEPROM_Program(EEPROM_START_ADDR+88, step11);
+	DATAEEPROM_Program(EEPROM_START_ADDR+96, step12);
 }
 
 /**
@@ -377,61 +472,61 @@ void Delay(__IO uint32_t nCount)
 static void Show_Message(void)
 {
 	unsigned int  ReadValueTemp;
+	#ifdef DEBUG
 	if(ADC_IN1_READ() == 1)
 	{
-//	#ifdef DEBUG
 		printf("\r\n CC1101 chip transfer program \n");
 		printf(" using USART2,configuration:%d 8-N-1 \n",DEBUG_USART_BAUDRATE);
 		printf(" when in transfer mode,the data must not exceed 60 bytes!!\r\n");  
-//	#endif
 	}
+	#endif
 	ReadValueTemp = ADXL362RegisterRead(XL362_DEVID_AD);     	//Analog Devices device ID, 0xAD
 	if(ReadValueTemp == 0xAD)
 	{
 		LED_GREEN_OFF();
 		Delay(500);
 	}
+	#ifdef DEBUG
 	if(ADC_IN1_READ() == 1)
 	{
-//	#ifdef DEBUG
 		printf("Analog Devices device ID: %x\n",ReadValueTemp);	 	//send via UART
-//	#endif
 	}
+	#endif
 	ReadValueTemp = ADXL362RegisterRead(XL362_DEVID_MST);    	//Analog Devices MEMS device ID, 0x1D
 	if(ReadValueTemp == 0x1D)
 	{
 		LED_GREEN_ON();
 		Delay(500);
 	}
+	#ifdef DEBUG
 	if(ADC_IN1_READ() == 1)
 	{
-//	#ifdef DEBUG
 		printf("Analog Devices MEMS device ID: %x\n",ReadValueTemp);	//send via UART
-//	#endif
 	}
+	#endif
 	ReadValueTemp = ADXL362RegisterRead(XL362_PARTID);       	//part ID, 0xF2
 	if(ReadValueTemp == 0xF2)
 	{
 		LED_GREEN_OFF();
 		Delay(500);
 	}
+	#ifdef DEBUG
 	if(ADC_IN1_READ() == 1)
 	{
-//	#ifdef DEBUG
 		printf("Part ID: %x\n",ReadValueTemp);										//send via UART
-//	#endif
 	}
+	#endif
 	ReadValueTemp = ADXL362RegisterRead(XL362_REVID);       	//version ID, 0x02
 	if(ReadValueTemp == 0x02)
 	{
 		LED_GREEN_ON();
 	}
+	#ifdef DEBUG
 	if(ADC_IN1_READ() == 1)
 	{
-//	#ifdef DEBUG
 		printf("Version ID: %x\n",ReadValueTemp);									//send via UART
-//	#endif
 	}
+	#endif
 }
 
 /**
@@ -443,7 +538,9 @@ void Error_Handler(void)
 {
   /* User may add here some code to deal with this error */
   LED_GREEN_OFF();
+	#ifdef DEBUG
 	printf("error\n");
+	#endif
   while(1)
   {
   }
